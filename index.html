@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>激光雷达树木检测系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .visualization-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            height: fit-content;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        #scanCanvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+        }
+
+        .control-section {
+            margin-bottom: 25px;
+        }
+
+        .control-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #48bb78, #38a169);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f56565, #e53e3e);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            background: #f7fafc;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-connected {
+            background: #48bb78;
+            box-shadow: 0 0 10px rgba(72, 187, 120, 0.5);
+        }
+
+        .status-disconnected {
+            background: #f56565;
+        }
+
+        .status-scanning {
+            background: #ed8936;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .tree-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px;
+            background: #f7fafc;
+        }
+
+        .tree-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #48bb78;
+        }
+
+        .tree-info {
+            font-size: 0.9em;
+        }
+
+        .tree-diameter {
+            font-weight: bold;
+            color: #2d3748;
+        }
+
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .setting-item label {
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .setting-item input {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .data-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-top: 20px;
+        }
+
+        .data-section {
+            margin-bottom: 20px;
+        }
+
+        .data-section h3 {
+            color: #4a5568;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+
+        .file-input {
+            margin: 10px 0;
+        }
+
+        .file-input input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f7fafc;
+        }
+
+        .log-area {
+            height: 150px;
+            overflow-y: auto;
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin: 2px 0;
+        }
+
+        .log-info { color: #63b3ed; }
+        .log-success { color: #68d391; }
+        .log-warning { color: #f6e05e; }
+        .log-error { color: #fc8181; }
+
+        /* 新增的界面优化样式 */
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 0 10px;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 8px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            background: #4a5568;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sm:hover {
+            background: #2d3748;
+            transform: translateY(-1px);
+        }
+
+        .btn-sm.active {
+            background: #3182ce;
+        }
+
+        .btn-test {
+            background: #ff6b6b !important;
+        }
+
+        .scan-overlay {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .scan-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .scan-angle, .scan-progress {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .view-legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #e2e8f0;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌲 激光雷达树木检测系统</h1>
+            <p>HOKUYO URG-04LX-UG01 实时扫描与树木识别</p>
+        </div>
+
+        <div class="main-content">
+            <div class="visualization-panel">
+                <div class="canvas-header">
+                    <h3>🌐 激光雷达扫描视图</h3>
+                    <div class="view-controls">
+                        <button type="button" class="btn btn-sm" id="resetViewBtn">重置视图</button>
+                        <button type="button" class="btn btn-sm" id="toggleGridBtn">网格</button>
+                        <button type="button" class="btn btn-sm" id="toggleLabelsBtn">标签</button>
+                        <button type="button" class="btn btn-sm" id="rotateViewBtn">旋转90°</button>
+                        <button type="button" class="btn btn-sm btn-test" id="testBtn">测试</button>
+                </div>
+                    </div>
+                <div class="canvas-container">
+                    <canvas id="scanCanvas"></canvas>
+                    <div class="scan-overlay">
+                        <div class="scan-info">
+                            <div class="scan-angle">扫描角度: <span id="currentAngle">-120°</span></div>
+                            <div class="scan-progress">进度: <span id="scanProgress">0%</span></div>
+                    </div>
+                </div>
+            </div>
+                <div class="view-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #3b82f6;"></div>
+                        <span>扫描点</span>
+                </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #10b981;"></div>
+                        <span>检测树木</span>
+                        </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(59, 130, 246, 0.8);"></div>
+                        <span>扫描范围</span>
+                        </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: rgba(255, 0, 0, 0.15);"></div>
+                        <span>盲区</span>
+                        </div>
+                    </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="treeCount">0</div>
+                        <div class="stat-label">检测到树木</div>
+                        </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="scanPoints">0</div>
+                        <div class="stat-label">扫描点数</div>
+                        </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgDiameter">0</div>
+                        <div class="stat-label">平均直径(mm)</div>
+                        </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="scanTime">0</div>
+                        <div class="stat-label">扫描时间(ms)</div>
+                        </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgDistance">0</div>
+                        <div class="stat-label">平均距离(mm)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="maxDistance">0</div>
+                        <div class="stat-label">最大距离(mm)</div>
+                </div>
+            </div>
+        </div>
+
+            <div class="control-panel">
+                <div class="control-section">
+                    <h3>🔗 连接控制</h3>
+                    <div class="status-indicator">
+                        <div class="status-dot status-disconnected" id="statusDot"></div>
+                        <span id="statusText">未连接</span>
+            </div>
+                    <button type="button" class="btn btn-primary" id="connectBtn">连接激光雷达</button>
+                    <button type="button" class="btn btn-danger" id="disconnectBtn" disabled>断开连接</button>
+        </div>
+
+                <div class="control-section">
+                    <h3>📡 扫描控制</h3>
+                    <button type="button" class="btn btn-success" id="startScanBtn" disabled>开始扫描</button>
+                    <button type="button" class="btn btn-warning" id="pauseScanBtn" disabled>暂停扫描</button>
+                    <button type="button" class="btn btn-primary" id="singleScanBtn" disabled>单次扫描</button>
+            </div>
+
+                <div class="control-section">
+                    <h3>🌳 树木检测</h3>
+                    <button type="button" class="btn btn-success" id="detectTreesBtn" disabled>检测树木</button>
+                    <button type="button" class="btn btn-primary" id="clearTreesBtn">清除结果</button>
+                    <button type="button" class="btn btn-warning" id="debugBtn" disabled>调试数据</button>
+                    <button type="button" class="btn btn-info" id="calibrateBtn" disabled>校准测试</button>
+        </div>
+
+                <div class="control-section">
+                    <h3>⚙️ 检测参数</h3>
+                <div class="setting-item">
+                    <label for="epsilon">聚类半径 (mm):</label>
+                        <input type="number" id="epsilon" name="epsilon" value="90" min="10" max="500" title="设置聚类算法的半径参数">
+                </div>
+                <div class="setting-item">
+                    <label for="minPts">最小点数:</label>
+                        <input type="number" id="minPts" name="minPts" value="6" min="3" max="20" title="设置聚类算法的最小点数">
+                </div>
+                <div class="setting-item">
+                    <label for="minRadius">最小半径 (mm):</label>
+                        <input type="number" id="minRadius" name="minRadius" value="50" min="10" max="200" title="设置树木检测的最小半径">
+                </div>
+                <div class="setting-item">
+                    <label for="maxRadius">最大半径 (mm):</label>
+                        <input type="number" id="maxRadius" name="maxRadius" value="450" min="100" max="1000" title="设置树木检测的最大半径">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>🌲 检测结果</h3>
+                    <div class="tree-list" id="treeList">
+                        <div style="text-align: center; color: #718096; padding: 20px;">
+                            暂无检测结果
+                        </div>
+                </div>
+            </div>
+
+            <!-- 单点测距传感器控制面板 -->
+            <div class="control-section">
+                <h3>📏 单点测距传感器 (STP-23L)</h3>
+                <div class="status-indicator">
+                    <div class="status-dot status-disconnected" id="stp23lStatusDot"></div>
+                    <span id="stp23lStatusText">未连接</span>
+                </div>
+                <button type="button" class="btn btn-primary" id="stp23lConnectBtn">连接STP-23L</button>
+                <button type="button" class="btn btn-danger" id="stp23lDisconnectBtn" disabled>断开STP-23L</button>
+                <button type="button" class="btn btn-success" id="stp23lStartBtn" disabled>开始测量</button>
+                <button type="button" class="btn btn-warning" id="stp23lStopBtn" disabled>停止测量</button>
+            </div>
+
+            <div class="control-section">
+                <h3>📊 高度测量数据</h3>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="currentHeight">0</div>
+                        <div class="stat-label">当前高度(mm)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="avgHeight">0</div>
+                        <div class="stat-label">平均高度(mm)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="heightCount">0</div>
+                        <div class="stat-label">测量次数</div>
+                    </div>
+                </div>
+                <div class="setting-item">
+                    <label for="heightThreshold">高度阈值 (mm):</label>
+                    <input type="number" id="heightThreshold" name="heightThreshold" value="1000" min="100" max="5000" title="设置高度变化阈值">
+                </div>
+                <button type="button" class="btn btn-primary" id="clearHeightBtn">清除数据</button>
+            </div>
+        </div>
+    </div>
+
+        <div class="data-panel">
+            <div class="data-section">
+                <h3>📁 数据管理</h3>
+                <div class="file-input">
+                    <label for="importFile">选择数据文件:</label>
+                    <input type="file" id="importFile" name="importFile" accept=".txt,.csv" title="选择要导入的激光雷达数据文件">
+                    <button type="button" class="btn btn-primary" id="importBtn">导入数据</button>
+                </div>
+                <button type="button" class="btn btn-success" id="exportBtn">导出数据</button>
+                <button type="button" class="btn btn-warning" id="exportTreesBtn">导出树木信息</button>
+            </div>
+
+            <div class="data-section">
+                <h3>📈 高度变化图表</h3>
+                <div class="canvas-container" style="height: 300px;">
+                    <canvas id="heightChart"></canvas>
+                </div>
+                <div style="margin-top: 10px; text-align: center;">
+                    <button type="button" class="btn btn-primary" id="exportHeightBtn">导出高度数据</button>
+                    <button type="button" class="btn btn-warning" id="resetHeightChartBtn">重置图表</button>
+                    <button type="button" class="btn btn-info" id="testHeightBtn" style="margin-left: 10px;">测试数据</button>
+                </div>
+            </div>
+
+            <div class="data-section">
+                <h3>📊 系统日志</h3>
+                <div class="log-area" id="logArea">
+                    <div class="log-entry log-info">[INFO] 系统已启动，等待连接...</div>
+                </div>
+                <button type="button" class="btn btn-primary" id="clearLogBtn">清除日志</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="lidar-system.js"></script>
+    <script>
+        // 简单的按钮测试
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM已加载，开始测试按钮...');
+            
+            // 等待系统初始化
+            setTimeout(function() {
+                const testBtn = document.getElementById('testBtn');
+                const resetBtn = document.getElementById('resetViewBtn');
+                const gridBtn = document.getElementById('toggleGridBtn');
+                const labelsBtn = document.getElementById('toggleLabelsBtn');
+                
+                console.log('按钮元素检查:');
+                console.log('testBtn:', testBtn);
+                console.log('resetBtn:', resetBtn);
+                console.log('gridBtn:', gridBtn);
+                console.log('labelsBtn:', labelsBtn);
+                console.log('window.lidarSystem:', window.lidarSystem);
+                
+                // 直接测试按钮点击
+                if (testBtn) {
+                    testBtn.addEventListener('click', function() {
+                        console.log('测试按钮被直接点击！');
+                        alert('直接事件监听器工作正常！');
+                    });
+                }
+                
+                // 检查按钮是否被其他元素覆盖
+                if (resetBtn) {
+                    const rect = resetBtn.getBoundingClientRect();
+                    const elementAtPoint = document.elementFromPoint(rect.left + rect.width/2, rect.top + rect.height/2);
+                    console.log('重置按钮位置:', rect);
+                    console.log('该位置的元素:', elementAtPoint);
+                    console.log('是否为按钮本身:', elementAtPoint === resetBtn);
+                }
+                
+                // 等待更长时间确保系统完全初始化
+                setTimeout(function() {
+                    console.log('延迟检查 - window.lidarSystem:', window.lidarSystem);
+                    
+                    // 如果系统仍未初始化，尝试手动初始化
+                    if (!window.lidarSystem) {
+                        console.log('系统未初始化，尝试手动初始化...');
+                        try {
+                            window.lidarSystem = new LidarSystem();
+                            console.log('手动初始化成功:', window.lidarSystem);
+                        } catch (error) {
+                            console.error('手动初始化失败:', error);
+                            alert('系统初始化失败: ' + error.message);
+                            return;
+                        }
+                    }
+                    
+                    // 添加简单的内联测试，调用实际功能
+                    if (resetBtn) {
+                        resetBtn.onclick = function() {
+                            console.log('内联onclick: 重置视图按钮被点击');
+                            console.log('当前window.lidarSystem:', window.lidarSystem);
+                            if (window.lidarSystem && typeof window.lidarSystem.resetView === 'function') {
+                                window.lidarSystem.resetView();
+                            } else {
+                                alert('激光雷达系统未初始化或方法不存在');
+                            }
+                        };
+                    }
+                    
+                    if (gridBtn) {
+                        gridBtn.onclick = function() {
+                            console.log('内联onclick: 网格按钮被点击');
+                            console.log('当前window.lidarSystem:', window.lidarSystem);
+                            if (window.lidarSystem && typeof window.lidarSystem.toggleGrid === 'function') {
+                                window.lidarSystem.toggleGrid();
+                            } else {
+                                alert('激光雷达系统未初始化或方法不存在');
+                            }
+                        };
+                    }
+                    
+                            if (labelsBtn) {
+                                labelsBtn.onclick = function() {
+                                    console.log('内联onclick: 标签按钮被点击');
+                                    console.log('当前window.lidarSystem:', window.lidarSystem);
+                                    if (window.lidarSystem && typeof window.lidarSystem.toggleLabels === 'function') {
+                                        window.lidarSystem.toggleLabels();
+                                    } else {
+                                        alert('激光雷达系统未初始化或方法不存在');
+                                    }
+                                };
+                            }
+                            
+                            // 旋转按钮使用事件委托，不需要内联onclick
+                }, 2000); // 再等待2秒
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
