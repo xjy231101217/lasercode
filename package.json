@@ -1,0 +1,39 @@
+{
+  "name": "laser-lidar-system",
+  "version": "1.0.0",
+  "description": "激光雷达树木检测系统 - 支持实时数据同步的WebSocket服务器",
+  "main": "websocket-server.js",
+  "scripts": {
+    "start": "node websocket-server.js",
+    "dev": "nodemon websocket-server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "lidar",
+    "laser",
+    "trees",
+    "detection",
+    "websocket",
+    "realtime",
+    "sync"
+  ],
+  "author": "AI Assistant",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xjy231101217/lasercode.git"
+  },
+  "bugs": {
+    "url": "https://github.com/xjy231101217/lasercode/issues"
+  },
+  "homepage": "https://github.com/xjy231101217/lasercode#readme"
+}

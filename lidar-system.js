@@ -138,6 +138,11 @@ class STP23LSensor {
             this.updateButtons();
             this.log('STP-23L传感器连接成功！', 'success');
             
+            // 发送状态更新到WebSocket服务器
+            if (window.lidarSystem && typeof window.lidarSystem.sendStatusUpdate === 'function') {
+                window.lidarSystem.sendStatusUpdate();
+            }
+            
         } catch (error) {
             this.handleConnectionError(error);
         }
@@ -245,6 +250,11 @@ class STP23LSensor {
                     
                     // 检查高度变化
                     this.checkHeightChange();
+                    
+                    // 发送高度数据到WebSocket服务器
+                    if (window.lidarSystem && typeof window.lidarSystem.sendHeightData === 'function') {
+                        window.lidarSystem.sendHeightData();
+                    }
                 }
             }
             
@@ -273,11 +283,41 @@ class STP23LSensor {
             // 获取新的读取器
             this.reader = this.port.readable.getReader();
             
-            // 读取数据包
-            const { value, done } = await this.reader.read();
-            if (done) return null;
+            // 按照STP-23L协议读取195字节数据包
+            let rawData = new Uint8Array(0);
+            let attempts = 0;
+            const maxAttempts = 10;
             
-            return new Uint8Array(value);
+            while (rawData.length < STP23L_CONSTANTS.PACKET_SIZE && attempts < maxAttempts) {
+                const { value, done } = await this.reader.read();
+                if (done) break;
+                
+                // 合并数据
+                const newData = new Uint8Array(value);
+                const combinedData = new Uint8Array(rawData.length + newData.length);
+                combinedData.set(rawData);
+                combinedData.set(newData, rawData.length);
+                rawData = combinedData;
+                
+                attempts++;
+                
+                // 如果数据足够，跳出循环
+                if (rawData.length >= STP23L_CONSTANTS.PACKET_SIZE) {
+                    break;
+                }
+                
+                // 短暂等待更多数据
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            
+            // 检查是否读取到完整的数据包
+            if (rawData.length >= STP23L_CONSTANTS.PACKET_SIZE) {
+                // 返回前195字节
+                return rawData.slice(0, STP23L_CONSTANTS.PACKET_SIZE);
+            } else {
+                this.log(`STP-23L数据包不完整: ${rawData.length}/${STP23L_CONSTANTS.PACKET_SIZE} 字节`, 'warning');
+                return null;
+            }
             
         } catch (error) {
             this.log(`读取STP-23L数据失败: ${error.message}`, 'error');
@@ -307,41 +347,41 @@ class STP23LSensor {
             }
             
             const measurements = [];
-            const fields = STP23L_CONSTANTS.DATA_FIELDS;
             
-            // 从第11个字节开始解析测量数据
+            // 从第11个字节开始解析测量数据，每15个字节为一个测量点
             for (let i = STP23L_CONSTANTS.DATA_START_INDEX; i < data.length; i += STP23L_CONSTANTS.DATA_INTERVAL) {
                 if (i + STP23L_CONSTANTS.DATA_INTERVAL < data.length) {
-                    // 解析距离数据（高字节在前，低字节在后）
-                    const distanceHigh = data[i + fields.DISTANCE_HIGH];
-                    const distanceLow = data[i + fields.DISTANCE_LOW];
+                    // 按照官方例程解析数据
+                    // 距离数据：低字节在前，高字节在后
+                    const distanceLow = data[i];
+                    const distanceHigh = data[i + 1];
                     const distance = (distanceHigh << 8) | distanceLow;
                     
-                    // 解析环境噪声
-                    const noiseHigh = data[i + fields.NOISE_HIGH];
-                    const noiseLow = data[i + fields.NOISE_LOW];
+                    // 环境噪声：低字节在前，高字节在后
+                    const noiseLow = data[i + 2];
+                    const noiseHigh = data[i + 3];
                     const noise = (noiseHigh << 8) | noiseLow;
                     
-                    // 解析接收强度信息（4字节）
-                    const peak1 = data[i + fields.PEAK_1];
-                    const peak2 = data[i + fields.PEAK_2];
-                    const peak3 = data[i + fields.PEAK_3];
-                    const peak4 = data[i + fields.PEAK_4];
+                    // 接收强度信息（4字节）：从低字节到高字节
+                    const peak4 = data[i + 4];
+                    const peak3 = data[i + 5];
+                    const peak2 = data[i + 6];
+                    const peak1 = data[i + 7];
                     const peak = (peak1 << 24) | (peak2 << 16) | (peak3 << 8) | peak4;
                     
-                    // 解析置信度
-                    const confidence = data[i + fields.CONFIDENCE];
+                    // 置信度
+                    const confidence = data[i + 8];
                     
-                    // 解析积分次数（4字节）
-                    const intg1 = data[i + fields.INTG_1];
-                    const intg2 = data[i + fields.INTG_2];
-                    const intg3 = data[i + fields.INTG_3];
-                    const intg4 = data[i + fields.INTG_4];
+                    // 积分次数（4字节）：从低字节到高字节
+                    const intg4 = data[i + 9];
+                    const intg3 = data[i + 10];
+                    const intg2 = data[i + 11];
+                    const intg1 = data[i + 12];
                     const intg = (intg1 << 24) | (intg2 << 16) | (intg3 << 8) | intg4;
                     
-                    // 解析温度表征值
-                    const reftofHigh = data[i + fields.REFTOF_HIGH];
-                    const reftofLow = data[i + fields.REFTOF_LOW];
+                    // 温度表征值：低字节在前，高字节在后
+                    const reftofLow = data[i + 13];
+                    const reftofHigh = data[i + 14];
                     const reftof = (reftofHigh << 8) | reftofLow;
                     
                     measurements.push({
@@ -457,6 +497,11 @@ class STP23LSensor {
         // 重置状态
         this.isConnected = false;
         this.isMeasuring = false;
+        
+        // 发送状态更新到WebSocket服务器
+        if (window.lidarSystem && typeof window.lidarSystem.sendStatusUpdate === 'function') {
+            window.lidarSystem.sendStatusUpdate();
+        }
     }
     
     /**
@@ -521,6 +566,14 @@ class LidarSystem {
         this.heightChart = null;
         this.heightChartCtx = null;
         
+        // WebSocket连接相关
+        this.ws = null;
+        this.wsConnected = false;
+        this.wsReconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectInterval = 3000;
+        this.clientId = null;
+        
         // DOM元素引用
         this.canvas = null;
         this.ctx = null;
@@ -571,6 +624,9 @@ class LidarSystem {
         this.setupEventListeners();
         this.updateButtons();
         this.updateVisualization();
+        
+        // 初始化WebSocket连接
+        this.initWebSocket();
         
         // 确保旋转角度正确初始化
         console.log('系统初始化 - 旋转角度:', this.viewSettings.rotation);
@@ -984,6 +1040,9 @@ class LidarSystem {
             this.updateButtons();
             this.log('激光雷达连接成功！', 'success');
             
+            // 发送状态更新到WebSocket服务器
+            this.sendStatusUpdate();
+            
         } catch (error) {
             this.handleConnectionError(error);
         }
@@ -1100,6 +1159,9 @@ class LidarSystem {
         this.isConnected = false;
         this.scanData = [];
         this.trees = [];
+        
+        // 发送状态更新到WebSocket服务器
+        this.sendStatusUpdate();
     }
     
     /**
@@ -1258,6 +1320,10 @@ class LidarSystem {
             
             // 更新按钮状态 - 修复bug：扫描完成后启用树木检测按钮
             this.updateButtons();
+            
+            // 发送扫描数据到WebSocket服务器
+            this.sendScanData();
+            this.sendStatusUpdate();
             
         } catch (error) {
             this.log(`扫描失败: ${error.message}`, 'error');
@@ -2325,6 +2391,9 @@ class LidarSystem {
         this.updateStats(this.scanData, 0);
         
         this.log(`检测到 ${this.trees.length} 棵树`, 'success');
+        
+        // 发送树木数据到WebSocket服务器
+        this.sendTreeData();
     }
     
     dbscan(points) {
@@ -3053,6 +3122,303 @@ class LidarSystem {
         while (logArea.children.length > maxLogs) {
             logArea.removeChild(logArea.firstChild);
         }
+    }
+    
+    /**
+     * 初始化WebSocket连接
+     */
+    initWebSocket() {
+        try {
+            // 检测当前环境，确定WebSocket服务器地址
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = window.location.port || '8080';
+            const wsUrl = `${protocol}//${host}:${port}/ws`;
+            
+            this.log(`正在连接WebSocket服务器: ${wsUrl}`, 'info');
+            
+            this.ws = new WebSocket(wsUrl);
+            
+            this.ws.onopen = () => {
+                this.wsConnected = true;
+                this.wsReconnectAttempts = 0;
+                this.log('WebSocket连接成功', 'success');
+                
+                // 发送设备信息
+                this.sendDeviceInfo();
+                
+                // 开始心跳
+                this.startHeartbeat();
+            };
+            
+            this.ws.onmessage = (event) => {
+                this.handleWebSocketMessage(event);
+            };
+            
+            this.ws.onclose = () => {
+                this.wsConnected = false;
+                this.log('WebSocket连接已断开', 'warning');
+                this.attemptReconnect();
+            };
+            
+            this.ws.onerror = (error) => {
+                this.log(`WebSocket错误: ${error}`, 'error');
+            };
+            
+        } catch (error) {
+            this.log(`WebSocket初始化失败: ${error.message}`, 'error');
+        }
+    }
+    
+    /**
+     * 发送设备信息
+     */
+    sendDeviceInfo() {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        
+        const deviceInfo = {
+            type: 'device_info',
+            deviceType: 'laser_lidar',
+            deviceName: '激光雷达树木检测系统',
+            capabilities: ['scan', 'tree_detection', 'height_measurement'],
+            version: '1.0.0'
+        };
+        
+        this.ws.send(JSON.stringify(deviceInfo));
+    }
+    
+    /**
+     * 处理WebSocket消息
+     */
+    handleWebSocketMessage(event) {
+        try {
+            const data = JSON.parse(event.data);
+            
+            switch (data.type) {
+                case 'welcome':
+                    this.clientId = data.clientId;
+                    this.log(`WebSocket欢迎消息: ${data.message}`, 'info');
+                    break;
+                    
+                case 'history':
+                    this.log(`接收到历史数据: ${data.data.length} 条记录`, 'info');
+                    // 可以在这里处理历史数据
+                    break;
+                    
+                case 'client_list':
+                    this.updateClientList(data.clients);
+                    break;
+                    
+                case 'scan_data':
+                    this.handleRemoteScanData(data);
+                    break;
+                    
+                case 'tree_data':
+                    this.handleRemoteTreeData(data);
+                    break;
+                    
+                case 'height_data':
+                    this.handleRemoteHeightData(data);
+                    break;
+                    
+                case 'status_update':
+                    this.handleRemoteStatusUpdate(data);
+                    break;
+                    
+                case 'pong':
+                    // 心跳响应
+                    break;
+                    
+                default:
+                    this.log(`未知WebSocket消息类型: ${data.type}`, 'warning');
+            }
+        } catch (error) {
+            this.log(`WebSocket消息解析错误: ${error.message}`, 'error');
+        }
+    }
+    
+    /**
+     * 更新客户端列表显示
+     */
+    updateClientList(clients) {
+        // 可以在这里更新UI显示连接的客户端
+        console.log('连接的客户端:', clients);
+    }
+    
+    /**
+     * 处理远程扫描数据
+     */
+    handleRemoteScanData(data) {
+        if (data.clientId === this.clientId) return; // 忽略自己的数据
+        
+        this.log(`接收到远程扫描数据 (${data.clientId}): ${data.data.points.length} 个点`, 'info');
+        // 可以在这里处理远程扫描数据，比如在界面上显示
+    }
+    
+    /**
+     * 处理远程树木数据
+     */
+    handleRemoteTreeData(data) {
+        if (data.clientId === this.clientId) return; // 忽略自己的数据
+        
+        this.log(`接收到远程树木数据 (${data.clientId}): ${data.data.treeCount} 棵树`, 'info');
+        // 可以在这里处理远程树木数据
+    }
+    
+    /**
+     * 处理远程高度数据
+     */
+    handleRemoteHeightData(data) {
+        if (data.clientId === this.clientId) return; // 忽略自己的数据
+        
+        this.log(`接收到远程高度数据 (${data.clientId}): ${data.data.currentHeight}mm`, 'info');
+        // 可以在这里处理远程高度数据
+    }
+    
+    /**
+     * 处理远程状态更新
+     */
+    handleRemoteStatusUpdate(data) {
+        if (data.clientId === this.clientId) return; // 忽略自己的数据
+        
+        this.log(`远程设备状态更新 (${data.clientId}): 激光雷达=${data.data.lidarConnected}, STP-23L=${data.data.stp23lConnected}`, 'info');
+    }
+    
+    /**
+     * 发送扫描数据到服务器
+     */
+    sendScanData() {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        
+        const scanData = {
+            type: 'scan_data',
+            points: this.scanData,
+            treeCount: this.trees.length,
+            scanTime: this.lastScanTime || 0,
+            avgDistance: this.calculateAverageDistance(),
+            maxDistance: this.calculateMaxDistance()
+        };
+        
+        this.ws.send(JSON.stringify(scanData));
+    }
+    
+    /**
+     * 发送树木数据到服务器
+     */
+    sendTreeData() {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        
+        const treeData = {
+            type: 'tree_data',
+            trees: this.trees,
+            treeCount: this.trees.length,
+            avgDiameter: this.calculateAverageDiameter()
+        };
+        
+        this.ws.send(JSON.stringify(treeData));
+    }
+    
+    /**
+     * 发送高度数据到服务器
+     */
+    sendHeightData() {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        
+        const heightData = {
+            type: 'height_data',
+            currentHeight: this.stp23lSensor.currentHeight || 0,
+            avgHeight: this.stp23lSensor.averageHeight || 0,
+            heightCount: this.stp23lSensor.measurementCount || 0
+        };
+        
+        this.ws.send(JSON.stringify(heightData));
+    }
+    
+    /**
+     * 发送状态更新到服务器
+     */
+    sendStatusUpdate() {
+        if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        
+        const statusData = {
+            type: 'status_update',
+            lidarConnected: this.isConnected,
+            stp23lConnected: this.stp23lSensor.isConnected,
+            isScanning: this.isScanning,
+            isMeasuring: this.stp23lSensor.isMeasuring
+        };
+        
+        this.ws.send(JSON.stringify(statusData));
+    }
+    
+    /**
+     * 开始心跳
+     */
+    startHeartbeat() {
+        this.heartbeatInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                this.ws.send(JSON.stringify({ type: 'ping' }));
+            }
+        }, 30000); // 每30秒发送一次心跳
+    }
+    
+    /**
+     * 停止心跳
+     */
+    stopHeartbeat() {
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+            this.heartbeatInterval = null;
+        }
+    }
+    
+    /**
+     * 尝试重连
+     */
+    attemptReconnect() {
+        if (this.wsReconnectAttempts >= this.maxReconnectAttempts) {
+            this.log('WebSocket重连次数已达上限，停止重连', 'error');
+            return;
+        }
+        
+        this.wsReconnectAttempts++;
+        this.log(`WebSocket重连尝试 ${this.wsReconnectAttempts}/${this.maxReconnectAttempts}`, 'info');
+        
+        setTimeout(() => {
+            this.initWebSocket();
+        }, this.reconnectInterval);
+    }
+    
+    /**
+     * 计算平均距离
+     */
+    calculateAverageDistance() {
+        if (this.scanData.length === 0) return 0;
+        
+        const validDistances = this.scanData.filter(point => point.distance > 0);
+        if (validDistances.length === 0) return 0;
+        
+        const sum = validDistances.reduce((acc, point) => acc + point.distance, 0);
+        return Math.round(sum / validDistances.length);
+    }
+    
+    /**
+     * 计算最大距离
+     */
+    calculateMaxDistance() {
+        if (this.scanData.length === 0) return 0;
+        
+        return Math.max(...this.scanData.map(point => point.distance));
+    }
+    
+    /**
+     * 计算平均直径
+     */
+    calculateAverageDiameter() {
+        if (this.trees.length === 0) return 0;
+        
+        const sum = this.trees.reduce((acc, tree) => acc + tree.diameter, 0);
+        return Math.round(sum / this.trees.length);
     }
 }
 
