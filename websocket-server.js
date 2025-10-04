@@ -38,38 +38,41 @@ class LidarWebSocketServer {
      * 处理HTTP请求（用于静态文件服务）
      */
     handleHttpRequest(req, res) {
-        let filePath = req.url === '/' ? '/index.html' : req.url;
-        filePath = path.join(__dirname, filePath);
-        
-        // 检查文件是否存在
-        fs.access(filePath, fs.constants.F_OK, (err) => {
+        // 规范化路径并限制到项目根目录，防止路径遍历
+        const publicRoot = __dirname;
+        const requestedUrl = req.url === '/' ? '/index.html' : req.url;
+        const safePath = path.normalize(requestedUrl).replace(/^\\+|^\/+/, ''); // 去掉开头的分隔符
+        const resolvedPath = path.join(publicRoot, safePath);
+        if (!resolvedPath.startsWith(publicRoot)) {
+            res.writeHead(400, { 'Content-Type': 'text/plain' });
+            res.end('Bad Request');
+            return;
+        }
+
+        // 根据扩展名设置更完整的 Content-Type
+        const ext = path.extname(resolvedPath).toLowerCase();
+        const contentTypes = {
+            '.html': 'text/html; charset=utf-8',
+            '.js': 'application/javascript; charset=utf-8',
+            '.css': 'text/css; charset=utf-8',
+            '.json': 'application/json; charset=utf-8',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif',
+            '.svg': 'image/svg+xml',
+            '.ico': 'image/x-icon'
+        };
+        const contentType = contentTypes[ext] || 'application/octet-stream';
+
+        fs.readFile(resolvedPath, (err, data) => {
             if (err) {
-                res.writeHead(404, { 'Content-Type': 'text/plain' });
-                res.end('File not found');
+                res.writeHead(err.code === 'ENOENT' ? 404 : 500, { 'Content-Type': 'text/plain; charset=utf-8' });
+                res.end(err.code === 'ENOENT' ? 'File not found' : 'Internal server error');
                 return;
             }
-            
-            // 根据文件扩展名设置Content-Type
-            const ext = path.extname(filePath);
-            const contentTypes = {
-                '.html': 'text/html',
-                '.js': 'application/javascript',
-                '.css': 'text/css',
-                '.json': 'application/json'
-            };
-            
-            const contentType = contentTypes[ext] || 'text/plain';
-            
-            fs.readFile(filePath, (err, data) => {
-                if (err) {
-                    res.writeHead(500, { 'Content-Type': 'text/plain' });
-                    res.end('Internal server error');
-                    return;
-                }
-                
-                res.writeHead(200, { 'Content-Type': contentType });
-                res.end(data);
-            });
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(data);
         });
     }
     

@@ -577,6 +577,7 @@ class LidarSystem {
         // DOM元素引用
         this.canvas = null;
         this.ctx = null;
+        this.dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? window.devicePixelRatio : 1;
         
         // 定时器和动画
         this.scanInterval = null;
@@ -595,7 +596,7 @@ class LidarSystem {
             zoom: 1.0,
             offsetX: 0,
             offsetY: 0,
-            rotation: 0 // 旋转角度（度），确保初始化为0
+            rotation: 270 // 旋转角度（度），初始旋转270°让盲区在正左方
         };
         
         // 扫描参数（使用常量）
@@ -630,7 +631,7 @@ class LidarSystem {
         
         // 确保旋转角度正确初始化
         console.log('系统初始化 - 旋转角度:', this.viewSettings.rotation);
-        this.log(`激光雷达系统已初始化 - 旋转角度: ${this.viewSettings.rotation}°`, 'info');
+        this.log(`激光雷达系统已初始化 - 旋转角度: ${this.viewSettings.rotation}° (盲区位于正左方)`, 'info');
     }
     
     setupCanvas() {
@@ -646,13 +647,25 @@ class LidarSystem {
             throw new Error('无法获取Canvas 2D上下文');
         }
         
-        // 设置画布大小
+        // 获取CSS容器的实际尺寸，确保画布像素尺寸与CSS尺寸一致
         const rect = this.canvas.getBoundingClientRect();
-        this.canvas.width = rect.width * window.devicePixelRatio;
-        this.canvas.height = rect.height * window.devicePixelRatio;
-        this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
         
         console.log('Canvas设置完成:', this.canvas);
+        console.log('CSS尺寸:', rect.width, 'x', rect.height);
+        console.log('画布像素尺寸:', this.canvas.width, 'x', this.canvas.height);
+    }
+
+    // 在窗口尺寸变化时保持画布像素与CSS尺寸一致，避免中心位移
+    resizeCanvas() {
+        if (!this.canvas || !this.ctx) return;
+        // 重新获取CSS容器尺寸，确保像素尺寸与CSS尺寸一致
+        const rect = this.canvas.getBoundingClientRect();
+        this.canvas.width = rect.width;
+        this.canvas.height = rect.height;
+        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+        console.log('画布尺寸已更新:', this.canvas.width, 'x', this.canvas.height);
     }
     
     setupHeightChart() {
@@ -848,53 +861,39 @@ class LidarSystem {
             } else if (event.target.id === 'testBtn') {
                 console.log('事件委托: 测试按钮被点击');
                 self.log('测试按钮被点击 (事件委托)', 'info');
-                alert('测试按钮工作正常！JavaScript事件系统正常。');
+                // 魔法粒子轻量反馈
+                try {
+                    const rect = event.target.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    for (let i = 0; i < 18; i++) {
+                        const particle = document.createElement('span');
+                        particle.style.position = 'fixed';
+                        particle.style.left = centerX + 'px';
+                        particle.style.top = centerY + 'px';
+                        particle.style.width = '6px';
+                        particle.style.height = '6px';
+                        particle.style.borderRadius = '50%';
+                        particle.style.pointerEvents = 'none';
+                        particle.style.background = i % 3 === 0 ? '#ffd700' : (i % 3 === 1 ? '#4ecdc4' : '#45b7d1');
+                        const angle = (Math.PI * 2 / 18) * i;
+                        const distance = 30 + Math.random() * 26;
+                        const dx = Math.cos(angle) * distance;
+                        const dy = Math.sin(angle) * distance;
+                        particle.style.transform = `translate(-50%, -50%)`;
+                        document.body.appendChild(particle);
+                        requestAnimationFrame(() => {
+                            particle.style.transition = 'transform 500ms ease-out, opacity 500ms ease-out';
+                            particle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                            particle.style.opacity = '0';
+                        });
+                        setTimeout(() => particle.remove(), 520);
+                    }
+                } catch (_) {}
             }
         });
         
-        // 也尝试直接绑定事件监听器
-        const resetViewBtn = document.getElementById('resetViewBtn');
-        const toggleGridBtn = document.getElementById('toggleGridBtn');
-        const toggleLabelsBtn = document.getElementById('toggleLabelsBtn');
-        
-        if (resetViewBtn) {
-            resetViewBtn.addEventListener('click', function(e) {
-                console.log('直接绑定: 重置视图按钮被点击');
-                e.preventDefault();
-                self.log('重置视图按钮直接点击', 'info');
-                self.resetView();
-            });
-            this.log('重置视图按钮事件监听器已设置', 'info');
-        } else {
-            this.log('重置视图按钮未找到', 'error');
-        }
-        
-        if (toggleGridBtn) {
-            toggleGridBtn.addEventListener('click', function(e) {
-                console.log('直接绑定: 网格按钮被点击');
-                e.preventDefault();
-                self.log('网格按钮直接点击', 'info');
-                self.toggleGrid();
-            });
-            this.log('网格按钮事件监听器已设置', 'info');
-        } else {
-            this.log('网格按钮未找到', 'error');
-        }
-        
-        if (toggleLabelsBtn) {
-            toggleLabelsBtn.addEventListener('click', function(e) {
-                console.log('直接绑定: 标签按钮被点击');
-                e.preventDefault();
-                self.log('标签按钮直接点击', 'info');
-                self.toggleLabels();
-            });
-            this.log('标签按钮事件监听器已设置', 'info');
-        } else {
-            this.log('标签按钮未找到', 'error');
-        }
-        
-        // 旋转按钮 - 移除直接绑定，只使用事件委托
-        // 注意：旋转按钮使用事件委托，不需要直接绑定
+        // 旋转按钮使用事件委托，不进行直接绑定
         
         // 画布交互
         this.setupCanvasInteraction();
@@ -914,6 +913,7 @@ class LidarSystem {
             // 延迟重绘，避免频繁调用
             clearTimeout(this.resizeTimeout);
             this.resizeTimeout = setTimeout(() => {
+                this.resizeCanvas();
                 if (this.heightChartCtx) {
                     this.drawHeightChart(this.stp23lSensor.heightHistory);
                 }
@@ -1666,6 +1666,11 @@ class LidarSystem {
         // 重置视图变换
         this.resetViewTransform();
         
+        // 绘制距离标签（在视图变换之外，始终保持水平）
+        if (this.viewSettings.showLabels) {
+            this.drawDistanceLabels();
+        }
+        
         // 更新扫描信息显示
         this.updateScanInfo();
     }
@@ -1674,9 +1679,9 @@ class LidarSystem {
      * 应用视图变换
      */
     applyViewTransform() {
-        const rect = this.canvas.getBoundingClientRect();
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
+        // 直接使用画布的实际像素尺寸计算中心点，不受浏览器缩放影响
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
         
         this.ctx.save();
         // 先平移到中心点
@@ -1687,6 +1692,7 @@ class LidarSystem {
         this.ctx.rotate(this.viewSettings.rotation * Math.PI / 180);
         
         console.log('应用视图变换 - 旋转角度:', this.viewSettings.rotation, '度');
+        console.log('画布尺寸:', this.canvas.width, 'x', this.canvas.height, '中心点:', centerX, centerY);
     }
     
     /**
@@ -1707,13 +1713,13 @@ class LidarSystem {
         this.viewSettings.zoom = 1.0;
         this.viewSettings.offsetX = 0;
         this.viewSettings.offsetY = 0;
-        this.viewSettings.rotation = 0; // 确保旋转角度重置为0
+        this.viewSettings.rotation = 270; // 重置为270°，盲区在正左方
         
         console.log('viewSettings已更新:', this.viewSettings);
         console.log('旋转角度已重置为:', this.viewSettings.rotation);
         
         this.updateVisualization();
-        this.log('视图已重置 - 缩放:1.0, 偏移:(0,0), 旋转:0°', 'success');
+        this.log('视图已重置 - 缩放:1.0, 偏移:(0,0), 旋转:270° (盲区位于正左方)', 'success');
         
         // 添加视觉反馈
         const btn = document.getElementById('resetViewBtn');
@@ -1874,7 +1880,7 @@ class LidarSystem {
         const scale = 0.8; // 固定缩放比例
         
         // 绘制同心圆网格 - 根据缩放级别自动调整密度和线条粗细
-        this.ctx.strokeStyle = 'rgba(240, 240, 240, 0.3)';
+        this.ctx.strokeStyle = 'rgba(180, 220, 200, 0.4)';
         
         // 根据缩放级别调整网格线条粗细
         let gridLineWidth = 1; // 默认线条宽度
@@ -1925,7 +1931,7 @@ class LidarSystem {
         this.drawScanRange(maxRange, scale);
         
         // 绘制角度线 - 根据缩放级别自动调整密度和线条粗细
-        this.ctx.strokeStyle = 'rgba(208, 208, 208, 0.4)';
+        this.ctx.strokeStyle = 'rgba(160, 200, 180, 0.5)';
         
         // 根据缩放级别调整角度线粗细
         let angleLineWidth = 1; // 默认线条宽度
@@ -1976,8 +1982,8 @@ class LidarSystem {
             this.ctx.stroke();
         }
         
-        // 绘制中心点 - 根据缩放级别调整大小
-        this.ctx.fillStyle = '#666';
+        // 绘制中心点 - 根据缩放级别调整大小（提高可见性）
+        this.ctx.fillStyle = '#2e7d32';
         
         // 根据缩放级别调整中心点大小
         let centerPointSize = 3; // 默认中心点大小
@@ -2000,52 +2006,81 @@ class LidarSystem {
         this.ctx.beginPath();
         this.ctx.arc(0, 0, centerPointSize, 0, 2 * Math.PI);
         this.ctx.fill();
+        // 轻量十字辅助线，增强"正中心"感知
+        this.ctx.strokeStyle = 'rgba(46, 125, 50, 0.8)';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-8, 0);
+        this.ctx.lineTo(8, 0);
+        this.ctx.moveTo(0, -8);
+        this.ctx.lineTo(0, 8);
+        this.ctx.stroke();
         
-        // 绘制距离标签 - 固定字体大小
-        if (this.viewSettings.showLabels) {
-            this.ctx.fillStyle = 'rgba(102, 102, 102, 0.8)';
-            
-            // 固定字体大小，不受缩放影响
-            const fontSize = 12;
-            this.ctx.font = `${fontSize}px Arial`;
-            this.ctx.textAlign = 'center';
-            
-            // 根据缩放级别确定标签密度 - 大幅增加密度
-            let labelDensity = 12; // 默认12个标签
-            if (this.viewSettings.zoom > 3.0) {
-                labelDensity = 40; // 超高缩放：40个标签
-            } else if (this.viewSettings.zoom > 2.5) {
-                labelDensity = 32; // 很高缩放：32个标签
-            } else if (this.viewSettings.zoom > 2.0) {
-                labelDensity = 28; // 高缩放：28个标签
-            } else if (this.viewSettings.zoom > 1.5) {
-                labelDensity = 24; // 中高缩放：24个标签
-            } else if (this.viewSettings.zoom > 1.0) {
-                labelDensity = 20; // 中缩放：20个标签
-            } else if (this.viewSettings.zoom < 0.5) {
-                labelDensity = 8; // 低缩放：8个标签
-            } else if (this.viewSettings.zoom < 0.8) {
-                labelDensity = 10; // 中低缩放：10个标签
-            }
-            
-            // 绘制标签
-            for (let i = 1; i <= labelDensity; i++) {
-                const radius = (maxRange / labelDensity) * i * scale;
-                const distance = (maxRange / labelDensity) * i;
-                
-                // 根据距离选择合适的单位
-                let labelText;
-                if (distance >= 1000) {
-                    labelText = `${(distance/1000).toFixed(1)}m`;
-                } else {
-                    labelText = `${Math.round(distance)}mm`;
-                }
-                
-                this.ctx.fillText(labelText, radius, -5);
-            }
-        }
+        // 距离标签现在在视图变换之外绘制，见 drawDistanceLabels() 方法
     }
     
+    /**
+     * 绘制距离标签（在视图变换之外，始终对应实际网格圆圈）
+     */
+    drawDistanceLabels() {
+        const maxRange = this.scanParams.maxRange;
+        const scale = 0.8;
+        const centerX = this.canvas.width / 2;
+        const centerY = this.canvas.height / 2;
+        
+        this.ctx.fillStyle = 'rgba(46, 125, 50, 0.8)';
+        this.ctx.font = '12px Arial';
+        this.ctx.textAlign = 'center';
+        
+        // 根据缩放级别确定标签密度（与网格密度保持一致）
+        let labelDensity = 12;
+        if (this.viewSettings.zoom > 3.0) {
+            labelDensity = 40;
+        } else if (this.viewSettings.zoom > 2.5) {
+            labelDensity = 32;
+        } else if (this.viewSettings.zoom > 2.0) {
+            labelDensity = 28;
+        } else if (this.viewSettings.zoom > 1.5) {
+            labelDensity = 24;
+        } else if (this.viewSettings.zoom > 1.0) {
+            labelDensity = 20;
+        } else if (this.viewSettings.zoom < 0.5) {
+            labelDensity = 8;
+        } else if (this.viewSettings.zoom < 0.8) {
+            labelDensity = 10;
+        }
+        
+        // 绘制标签 - 对应实际的网格圆圈位置
+        for (let i = 1; i <= labelDensity; i++) {
+            const radius = (maxRange / labelDensity) * i * scale;
+            const distance = (maxRange / labelDensity) * i;
+            
+            // 根据距离选择合适的单位
+            let labelText;
+            if (distance >= 1000) {
+                labelText = `${(distance/1000).toFixed(1)}m`;
+            } else {
+                labelText = `${Math.round(distance)}mm`;
+            }
+            
+            // 简化版本：直接计算标签位置，确保可见
+            // 标签始终在网格圆圈的水平轴正方向位置
+            const labelX = centerX + radius * this.viewSettings.zoom + this.viewSettings.offsetX;
+            const labelY = centerY + this.viewSettings.offsetY - 8; // 稍微上移避免与圆圈重叠
+            
+            // 添加背景色确保标签可见
+            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            const textWidth = this.ctx.measureText(labelText).width;
+            this.ctx.fillRect(labelX - textWidth/2 - 2, labelY - 10, textWidth + 4, 14);
+            
+            // 绘制标签文字
+            this.ctx.fillStyle = 'rgba(46, 125, 50, 0.9)';
+            this.ctx.fillText(labelText, labelX, labelY);
+            
+            console.log(`标签 ${labelText} 位置: (${labelX}, ${labelY})`);
+        }
+    }
+
     /**
      * 绘制扫描范围（240度扫描区域和阴影）
      */
@@ -2056,8 +2091,8 @@ class LidarSystem {
         const endAngle = LIDAR_CONSTANTS.END_ANGLE * Math.PI / 180;      // 120度
         const scanRange = endAngle - startAngle;  // 240度
         
-        // 1. 绘制扫描不到的区域的红色阴影（下方盲区）
-        this.ctx.fillStyle = 'rgba(255, 0, 0, 0.15)'; // 半透明红色阴影
+        // 1. 绘制扫描不到的区域的阴影（下方盲区）- 清新橙色
+        this.ctx.fillStyle = 'rgba(255, 152, 0, 0.2)';
         
         // 绘制下方阴影区域（120度到-120度，经过下方）
         this.ctx.beginPath();
@@ -2068,7 +2103,7 @@ class LidarSystem {
         
         // 2. 绘制扫描范围边界线
         const scanArcLineWidth = this.getAdaptiveLineWidth(2, 4, 1);
-        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.8)'; // 蓝色边界线
+        this.ctx.strokeStyle = 'rgba(0, 172, 193, 0.9)';
         this.ctx.lineWidth = scanArcLineWidth;
         
         // 绘制扫描范围弧线
@@ -2077,7 +2112,7 @@ class LidarSystem {
         this.ctx.stroke();
         
         // 3. 绘制扫描范围边界射线
-        this.ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
+        this.ctx.strokeStyle = 'rgba(0, 172, 193, 0.7)';
         this.ctx.lineWidth = scanArcLineWidth * 0.8;
         
         // 左边界射线（-120度）
@@ -2100,7 +2135,7 @@ class LidarSystem {
         
         // 4. 绘制扫描范围标签
         if (this.viewSettings.showLabels) {
-            this.ctx.fillStyle = 'rgba(59, 130, 246, 0.9)';
+            this.ctx.fillStyle = 'rgba(0, 172, 193, 0.95)';
             const fontSize = 12; // 固定字体大小
             this.ctx.font = `${fontSize}px Arial`;
             this.ctx.textAlign = 'center';
@@ -2116,7 +2151,7 @@ class LidarSystem {
             // 在下方阴影区域显示"盲区"
             const blindAngle = Math.PI; // 正下方（180度）
             
-            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            this.ctx.fillStyle = 'rgba(255, 152, 0, 0.95)';
             this.ctx.font = `${fontSize}px Arial`; // 固定字体大小
             
             // 下方盲区标签
@@ -2189,9 +2224,9 @@ class LidarSystem {
             pointSize = 1.2;
         }
         
-        // 绘制扫描点
-        this.ctx.fillStyle = '#3b82f6';
-        this.ctx.globalAlpha = 0.8;
+        // 绘制扫描点：清新的湖蓝色
+        this.ctx.fillStyle = '#00acc1';
+        this.ctx.globalAlpha = 0.9;
         
         for (let i = 0; i < this.scanData.length; i += pointStep) {
             const point = this.scanData[i];
@@ -2244,22 +2279,22 @@ class LidarSystem {
             const y = -tree.center.y * scale; // 翻转Y轴
             const radius = tree.radius * scale;
             
-            // 绘制圆形
-            this.ctx.strokeStyle = '#10b981';
+            // 绘制圆形：清新绿色描边
+            this.ctx.strokeStyle = '#4caf50';
             this.ctx.lineWidth = treeLineWidth;
             this.ctx.beginPath();
             this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
             this.ctx.stroke();
             
-            // 绘制中心点
-            this.ctx.fillStyle = '#10b981';
+            // 绘制中心点：清新绿色
+            this.ctx.fillStyle = '#388e3c';
             this.ctx.beginPath();
             this.ctx.arc(x, y, centerPointSize, 0, 2 * Math.PI);
             this.ctx.fill();
             
             // 绘制标签
             if (this.viewSettings.showLabels) {
-                this.ctx.fillStyle = '#10b981';
+                this.ctx.fillStyle = '#388e3c';
                 this.ctx.font = `${fontSize}px Arial`; // 使用固定字体大小
                 this.ctx.textAlign = 'center';
                 this.ctx.fillText(`树${index + 1}`, x, y - radius - 10);
