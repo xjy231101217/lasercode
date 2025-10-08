@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>激光雷达树木检测系统</title>
-    <!-- 奇幻主题字体 -->
+    <!-- 优化的字体加载 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap" rel="stylesheet"></noscript>
     <style>
         :root {
             --color-lake: #4ecdc4;
@@ -17,164 +18,520 @@
             --paper: #f5f1e6;
             --paper-edge: #e3dccb;
             --ink: #1e2b20;
+            --dark-bg: #0a1a0a;
         }
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Cinzel', 'Microsoft YaHei', Arial, sans-serif;
+        html, body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
             background: linear-gradient(140deg, #1a2f1a 0%, #0d1f0d 60%, #0a1a0a 100%);
-            min-height: 100vh;
+            height: 100vh;
+            width: 100vw;
             color: #e9efe9;
             background-attachment: fixed;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            /* 性能优化 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            will-change: auto;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 20px;
+        /* 字体加载完成后应用Cinzel字体 */
+        .fonts-loaded body {
+            font-family: 'Cinzel', 'Microsoft YaHei', Arial, sans-serif;
         }
 
-        .header {
+        /* 全屏容器 */
+        .fullscreen-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 界面切换 */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            /* 性能优化 */
+            transform: translateZ(0);
+            backface-visibility: hidden;
+        }
+
+        .screen.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* 开始界面 */
+        .start-screen {
+            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            color: white;
-            margin-bottom: 30px;
         }
 
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        .start-content {
+            opacity: 1;
+            animation: fadeInUp 0.4s ease-out forwards;
         }
 
-        .header p {
-            font-size: 1.2em;
+        .start-title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: var(--color-gold);
+            text-shadow: 0 0 15px rgba(212, 182, 106, 0.4);
+            margin-bottom: 1rem;
+        }
+
+        .start-subtitle {
+            font-size: 1.5rem;
+            color: var(--color-lake);
+            margin-bottom: 3rem;
             opacity: 0.9;
         }
 
-        .main-content {
+        .start-button {
+            background: linear-gradient(135deg, var(--color-gold), #f2e6b8);
+            color: #2a2100;
+            border: none;
+            padding: 20px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 8px 25px rgba(212, 182, 106, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(212, 182, 106, 0.4);
+        }
+
+        .start-button:active {
+            transform: translateY(0);
+        }
+
+        /* 加载界面 */
+        .loading-screen {
+            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .loading-content {
+            opacity: 1;
+            animation: fadeInUp 0.3s ease-out forwards;
+        }
+
+        .loading-logo {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .loading-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--color-gold);
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(212, 182, 106, 0.3);
+        }
+
+        .loading-subtitle {
+            font-size: 1rem;
+            color: var(--color-lake);
+            margin-bottom: 2rem;
+            opacity: 0.8;
+        }
+
+        .loading-progress {
+            width: 300px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 0 auto 1rem;
+            position: relative;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-gold), var(--color-lake));
+            border-radius: 3px;
+            width: 0%;
+            animation: loadingProgress 3s ease-out forwards;
+            position: relative;
+        }
+
+        .loading-progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s ease-in-out infinite;
+        }
+
+        .loading-text {
+            font-size: 0.9rem;
+            color: #999;
+            margin-top: 1rem;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--color-gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+
+        @keyframes loadingProgress {
+            0% { width: 0%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 主菜单界面 */
+        .main-menu {
+            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            padding: 1rem;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .menu-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding-top: 1rem;
+        }
+
+        .menu-title {
+            font-size: 2rem;
+            color: var(--color-gold);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 15px rgba(212, 182, 106, 0.3);
+        }
+
+        .menu-subtitle {
+            font-size: 1rem;
+            color: var(--color-lake);
+            opacity: 0.8;
+        }
+
+        .menu-grid {
             display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 20px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            height: calc(100vh - 200px);
+            overflow: hidden;
+        }
+
+        .menu-card {
+            background: var(--paper);
+            border-radius: 15px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
+            color: var(--ink);
+            height: fit-content;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--color-gold);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        .menu-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.8rem;
+            display: block;
+        }
+
+        .menu-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: var(--ink);
+        }
+
+        .menu-card-desc {
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.3;
+        }
+
+        /* 子界面通用样式 */
+        .sub-screen {
+            background: var(--paper);
+            color: var(--ink);
+        }
+
+        .sub-header {
+            background: linear-gradient(135deg, var(--color-gold), #f2e6b8);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .sub-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2a2100;
+        }
+
+        .back-button {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: #2a2100;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.2s ease;
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateX(-1px);
+        }
+
+        /* 全屏按钮 */
+        .fullscreen-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .fullscreen-button:hover {
+            background: rgba(0,0,0,0.8);
+            border-color: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+
+        .fullscreen-button:active {
+            transform: scale(0.95);
+        }
+
+        .fullscreen-button.fullscreen {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* 全屏提示 */
+        .fullscreen-hint {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            z-index: 1001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        .fullscreen-hint.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sub-content {
+            flex: 1;
+            padding: 1rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 80px);
+        }
+
+        /* 二维测量界面 */
+        .measurement-2d {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
         }
 
         .visualization-panel {
-            background: var(--paper);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 14px 32px rgba(0,0,0,0.35);
-            border: 1px solid var(--paper-edge);
-            color: #132017;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
 
         .control-panel {
-            background: var(--paper);
-            border-radius: 14px;
-            padding: 18px;
-            box-shadow: 0 14px 32px rgba(0,0,0,0.35);
-            border: 1px solid var(--paper-edge);
-            height: fit-content;
-            color: #132017;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            height: 100%;
         }
 
         .canvas-container {
             position: relative;
             width: 100%;
-            height: 500px;
+            height: 300px; /* 4:3 比例，基于400px宽度 */
             border: 2px solid rgba(76, 175, 80, 0.6);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
             background: radial-gradient(520px 320px at 50% 50%, rgba(139, 195, 74, 0.15), transparent 60%), #e8f5e8;
             box-shadow: inset 0 0 24px rgba(76, 175, 80, 0.2);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        #scanCanvas { width: 100%; height: 100%; cursor: crosshair; }
+        #scanCanvas { 
+            width: 100%; 
+            height: 100%; 
+            cursor: crosshair;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(0,0,0,0.18);
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            background: linear-gradient(135deg, #d9c48b, var(--color-gold));
+            color: #2a2100;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .btn-primary { background: linear-gradient(135deg, #358eaa, var(--color-lake)); color: #071113; }
+        .btn-success { background: linear-gradient(135deg, #68ae92, var(--color-forest)); color: #081a16; }
+        .btn-warning { background: linear-gradient(135deg, #d3b469, var(--color-gold)); color: #271c05; }
+        .btn-danger { background: linear-gradient(135deg, #df6666, #c24141); color: #210c0c; }
 
         .control-section {
-            margin-bottom: 25px;
+            margin-bottom: 1.5rem;
         }
 
         .control-section h3 {
             color: #4a5568;
-            margin-bottom: 15px;
-            font-size: 1.1em;
+            margin-bottom: 1rem;
+            font-size: 1rem;
             border-bottom: 2px solid #e2e8f0;
             padding-bottom: 5px;
         }
 
-        .btn {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            border: 1px solid rgba(0,0,0,0.18);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: transform 0.18s ease, box-shadow 0.18s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #0a1414;
-            box-shadow: 0 10px 22px rgba(0,0,0,0.25);
-        }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0,0,0,0.34); border-color: rgba(0,0,0,0.22); }
-        .btn:active { transform: translateY(0); box-shadow: 0 8px 18px rgba(0,0,0,0.28); }
-
-        .btn-primary { background: linear-gradient(135deg, #358eaa, var(--color-lake)); color: #071113; }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.7);
+            border: 1px solid rgba(0,0,0,0.12);
         }
 
-        .btn-success { background: linear-gradient(135deg, #68ae92, var(--color-forest)); color: #081a16; }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
         }
-
-        .btn-warning { background: linear-gradient(135deg, #d3b469, var(--color-gold)); color: #271c05; }
-
-        .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(237, 137, 54, 0.4);
-        }
-
-        .btn-danger { background: linear-gradient(135deg, #df6666, #c24141); color: #210c0c; }
-
-        .btn-danger:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(245, 101, 101, 0.4);
-        }
-
-        /* 补充缺失的 info 按钮样式，保证视觉一致性 */
-        .btn-info { background: linear-gradient(135deg, #66bade, #2f86b8); color: #071824; }
-
-        .btn-info:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(66, 153, 225, 0.4);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        .status-indicator { display: flex; align-items: center; margin: 10px 0; padding: 10px; border-radius: 10px; background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.12); color: #132017; }
-
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
 
         .status-connected { background: #48bb78; }
-
         .status-disconnected { background: #f56565; }
-
         .status-scanning { background: #ed8936; animation: pulse 1.5s infinite; }
+        .status-measuring { background: #4caf50; animation: pulse 1s infinite; }
 
         @keyframes pulse {
             0% { opacity: 1; }
@@ -182,357 +539,1160 @@
             100% { opacity: 1; }
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin: 15px 0;
+        /* 高度测量相关样式 */
+        .height-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(76, 175, 80, 0.1);
+            border-radius: 6px;
+            border-left: 3px solid #4caf50;
+            margin: 5px 0;
         }
 
-        .stat-card { background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4)); padding: 14px; border-radius: 10px; text-align: center; border-left: 4px solid var(--color-gold); }
+        .height-indicator.measuring {
+            background: rgba(76, 175, 80, 0.2);
+            animation: pulse 1s infinite;
+        }
 
-        .stat-value { font-size: 1.8em; font-weight: 700; color: #1c2b1f; letter-spacing: 0.3px; }
+        .height-indicator.ready {
+            background: rgba(33, 150, 243, 0.1);
+            border-left-color: #2196f3;
+        }
 
-        .stat-label {
-            font-size: 0.9em;
-            color: #718096;
+        .height-indicator.error {
+            background: rgba(244, 67, 54, 0.1);
+            border-left-color: #f44336;
+        }
+
+        .height-progress {
+            background: rgba(255,255,255,0.5);
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
             margin-top: 5px;
         }
 
-        .tree-list { max-height: 200px; overflow-y: auto; border: 1px solid rgba(0,0,0,0.12); border-radius: 10px; padding: 10px; background: rgba(255,255,255,0.9); color: #132017; }
-
-        .tree-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 5px 0; background: rgba(255,255,255,0.8); border-radius: 8px; border-left: 4px solid var(--color-forest); }
-
-        .tree-info {
-            font-size: 0.9em;
+        .height-progress-bar {
+            background: linear-gradient(90deg, #4caf50, #8bc34a);
+            height: 100%;
+            transition: width 0.3s ease;
         }
 
-        .tree-diameter {
-            font-weight: bold;
-            color: #2d3748;
+        .height-progress-bar.warning {
+            background: linear-gradient(90deg, #ff9800, #ffc107);
         }
 
+        .height-progress-bar.error {
+            background: linear-gradient(90deg, #f44336, #e91e63);
+        }
 
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
             margin: 10px 0;
+            flex-shrink: 0;
         }
 
-        .setting-item label {
-            font-size: 0.9em;
+        .stat-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4));
+            padding: 8px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 3px solid var(--color-gold);
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #1c2b1f;
+        }
+
+        .stat-label {
+            font-size: 0.7em;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        /* 三维测量界面 */
+        .measurement-3d {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 林场探测界面 */
+        .forest-detection {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 系统介绍界面 */
+        .system-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .placeholder-content {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .placeholder-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .placeholder-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
             color: #4a5568;
         }
 
-        .setting-item input {
-            width: 80px;
-            padding: 5px;
-            border: 1px solid #e2e8f0;
-            border-radius: 4px;
-            text-align: center;
+        .placeholder-desc {
+            color: #718096;
+            line-height: 1.4;
+            font-size: 0.9rem;
         }
 
-        .data-panel { background: var(--paper); border-radius: 14px; padding: 18px; box-shadow: 0 14px 32px rgba(0,0,0,0.35); border: 1px solid var(--paper-edge); margin-top: 20px; color: #132017; }
-
-        .data-section {
-            margin-bottom: 20px;
+        .info-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
         }
 
-        .data-section h3 { color: #1d1a10; margin-bottom: 15px; font-size: 1.1em; border-bottom: 2px solid rgba(0,0,0,0.12); padding-bottom: 6px; }
-
-        .file-input {
-            margin: 10px 0;
+        .info-card h3 {
+            color: #2d3748;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
         }
 
-        .file-input input[type="file"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            background: #f7fafc;
+        .info-card p {
+            color: #4a5568;
+            line-height: 1.5;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
         }
 
-        .log-area { height: 150px; overflow-y: auto; background: #0f1412; color: #eef3f7; padding: 15px; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.5; border: 1px solid rgba(255,255,255,0.12); }
-
-        .log-entry {
-            margin: 2px 0;
+        /* 历史记录界面 */
+        .history-records {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
         }
 
-        .log-info { color: #63b3ed; }
-        .log-success { color: #68d391; }
-        .log-warning { color: #f6e05e; }
-        .log-error { color: #fc8181; }
+        .records-list {
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
 
-        /* 新增的界面优化样式 */
-        .canvas-header {
+        .record-item {
+            background: rgba(255,255,255,0.8);
+            border-radius: 8px;
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+            border-left: 3px solid var(--color-forest);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .record-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
-            padding: 0 10px;
+            margin-bottom: 0.4rem;
         }
 
-        .view-controls {
-            display: flex;
-            gap: 8px;
-            position: relative;
-            z-index: 10;
+        .record-date {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9rem;
         }
 
-        .btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 10px; background: linear-gradient(135deg, #d9c48b, var(--color-gold)); color: #2a2100; border: none; cursor: pointer; transition: all 0.18s; box-shadow: 0 8px 18px rgba(0,0,0,0.2); }
-
-        .btn-sm:hover {
-            background: #2d3748;
-            transform: translateY(-1px);
+        .record-type {
+            background: var(--color-gold);
+            color: #2a2100;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
         }
 
-        .btn-sm.active { background: linear-gradient(135deg, #e7d394, #f2e6b8); }
-
-        .btn-test { background: linear-gradient(135deg, #ff9d9d, #ff6b6b) !important; color: #3a0a0a; }
-
-        .scan-overlay { position: absolute; top: 15px; right: 15px; background: rgba(0, 0, 0, 0.55); padding: 10px 15px; border-radius: 8px; color: #e7faff; font-size: 12px; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); z-index: 1; pointer-events: none; }
-
-        .scan-info {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
+        .record-details {
+            color: #4a5568;
+            font-size: 0.8rem;
         }
 
-        .scan-angle, .scan-progress {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        /* 优化的动画效果 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .view-legend { display: flex; justify-content: center; gap: 20px; margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.9); border-radius: 10px; border: 1px solid rgba(0,0,0,0.12); color: #132017; }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            color: #e2e8f0;
-        }
-
-        .legend-color { width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 0 8px rgba(255,255,255,0.3); }
-
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .main-content {
+            .menu-grid {
+                grid-template-columns: 1fr;
+                height: calc(100vh - 150px);
+            }
+            
+            .measurement-2d,
+            .measurement-3d,
+            .forest-detection,
+            .system-info {
                 grid-template-columns: 1fr;
             }
             
-            .header h1 {
-                font-size: 2em;
+            .start-title {
+                font-size: 2.5rem;
+            }
+            
+            .loading-title {
+                font-size: 1.5rem;
+            }
+            
+            .loading-progress {
+                width: 250px;
+            }
+            
+            .sub-content {
+                padding: 0.8rem;
+            }
+            
+            .canvas-container {
+                height: 263px; /* 4:3 比例，基于350px宽度 */
             }
             
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            }
+            
+            .fullscreen-button {
+                width: 45px;
+                height: 45px;
+                top: 15px;
+                right: 15px;
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .start-title {
+                font-size: 2rem;
+            }
+            
+            .loading-title {
+                font-size: 1.3rem;
+            }
+            
+            .loading-progress {
+                width: 200px;
+            }
+            
+            .loading-logo {
+                font-size: 2.5rem;
+            }
+            
+            .menu-title {
+                font-size: 1.5rem;
+            }
+            
+            .canvas-container {
+                height: 225px; /* 4:3 比例，基于300px宽度 */
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+            }
+            
+            .fullscreen-button {
+                width: 40px;
+                height: 40px;
+                top: 10px;
+                right: 10px;
+                font-size: 16px;
+            }
+            
+            .fullscreen-hint {
+                font-size: 14px;
+                padding: 15px 25px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🌲 激光雷达树木检测系统</h1>
-            <p>HOKUYO URG-04LX-UG01 实时扫描与树木识别</p>
-        </div>
-
-        <div class="main-content">
-            <div class="visualization-panel">
-                <div class="canvas-header">
-                    <h3>🌐 激光雷达扫描视图</h3>
-                    <div class="view-controls">
-                        <button type="button" class="btn btn-sm" id="resetViewBtn">重置视图</button>
-                        <button type="button" class="btn btn-sm" id="toggleGridBtn">网格</button>
-                        <button type="button" class="btn btn-sm" id="toggleLabelsBtn">标签</button>
-                        <button type="button" class="btn btn-sm" id="rotateViewBtn">旋转90°</button>
-                        <button type="button" class="btn btn-sm btn-test" id="testBtn">测试</button>
-                </div>
-                    </div>
-                <div class="canvas-container">
-                    <canvas id="scanCanvas"></canvas>
-                    <div class="scan-overlay">
-                        <div class="scan-info">
-                            <div class="scan-angle">扫描角度: <span id="currentAngle">-120°</span></div>
-                            <div class="scan-progress">进度: <span id="scanProgress">0%</span></div>
-                    </div>
-                </div>
-            </div>
-                <div class="view-legend">
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #00acc1;"></div>
-                        <span>扫描点</span>
-                </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: #4caf50;"></div>
-                        <span>检测树木</span>
-                        </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: rgba(0, 172, 193, 0.9);"></div>
-                        <span>扫描范围</span>
-                        </div>
-                    <div class="legend-item">
-                        <div class="legend-color" style="background: rgba(255, 152, 0, 0.4);"></div>
-                        <span>盲区</span>
-                        </div>
-                    </div>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="treeCount">0</div>
-                        <div class="stat-label">检测到树木</div>
-                        </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="scanPoints">0</div>
-                        <div class="stat-label">扫描点数</div>
-                        </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgDiameter">0</div>
-                        <div class="stat-label">平均直径(mm)</div>
-                        </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="scanTime">0</div>
-                        <div class="stat-label">扫描时间(ms)</div>
-                        </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgDistance">0</div>
-                        <div class="stat-label">平均距离(mm)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="maxDistance">0</div>
-                        <div class="stat-label">最大距离(mm)</div>
-                </div>
-            </div>
-        </div>
-
-            <div class="control-panel">
-                <div class="control-section">
-                    <h3>🔗 连接控制</h3>
-                    <div class="status-indicator">
-                        <div class="status-dot status-disconnected" id="statusDot"></div>
-                        <span id="statusText">未连接</span>
-            </div>
-                    <button type="button" class="btn btn-primary" id="connectBtn">连接激光雷达</button>
-                    <button type="button" class="btn btn-danger" id="disconnectBtn" disabled>断开连接</button>
-        </div>
-
-                <div class="control-section">
-                    <h3>📡 扫描控制</h3>
-                    <button type="button" class="btn btn-success" id="startScanBtn" disabled>开始扫描</button>
-                    <button type="button" class="btn btn-warning" id="pauseScanBtn" disabled>暂停扫描</button>
-                    <button type="button" class="btn btn-primary" id="singleScanBtn" disabled>单次扫描</button>
-            </div>
-
-                <div class="control-section">
-                    <h3>🌳 树木检测</h3>
-                    <button type="button" class="btn btn-success" id="detectTreesBtn" disabled>检测树木</button>
-                    <button type="button" class="btn btn-primary" id="clearTreesBtn">清除结果</button>
-                    <button type="button" class="btn btn-warning" id="debugBtn" disabled>调试数据</button>
-                    <button type="button" class="btn btn-info" id="calibrateBtn" disabled>校准测试</button>
-        </div>
-
-                <div class="control-section">
-                    <h3>⚙️ 检测参数</h3>
-                <div class="setting-item">
-                    <label for="epsilon">聚类半径 (mm):</label>
-                        <input type="number" id="epsilon" name="epsilon" value="90" min="10" max="500" title="设置聚类算法的半径参数">
-                </div>
-                <div class="setting-item">
-                    <label for="minPts">最小点数:</label>
-                        <input type="number" id="minPts" name="minPts" value="6" min="3" max="20" title="设置聚类算法的最小点数">
-                </div>
-                <div class="setting-item">
-                    <label for="minRadius">最小半径 (mm):</label>
-                        <input type="number" id="minRadius" name="minRadius" value="50" min="10" max="200" title="设置树木检测的最小半径">
-                </div>
-                <div class="setting-item">
-                    <label for="maxRadius">最大半径 (mm):</label>
-                        <input type="number" id="maxRadius" name="maxRadius" value="450" min="100" max="1000" title="设置树木检测的最大半径">
-                    </div>
-                </div>
-
-                <div class="control-section">
-                    <h3>🌲 检测结果</h3>
-                    <div class="tree-list" id="treeList">
-                        <div style="text-align: center; color: #718096; padding: 20px;">
-                            暂无检测结果
-                        </div>
-                </div>
-            </div>
-
-            <!-- 单点测距传感器控制面板 -->
-            <div class="control-section">
-                <h3>📏 单点测距传感器 (STP-23L)</h3>
-                <div class="status-indicator">
-                    <div class="status-dot status-disconnected" id="stp23lStatusDot"></div>
-                    <span id="stp23lStatusText">未连接</span>
-                </div>
-                <button type="button" class="btn btn-primary" id="stp23lConnectBtn">连接STP-23L</button>
-                <button type="button" class="btn btn-danger" id="stp23lDisconnectBtn" disabled>断开STP-23L</button>
-                <button type="button" class="btn btn-success" id="stp23lStartBtn" disabled>开始测量</button>
-                <button type="button" class="btn btn-warning" id="stp23lStopBtn" disabled>停止测量</button>
-            </div>
-
-            <div class="control-section">
-                <h3>📊 高度测量数据</h3>
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-value" id="currentHeight">0</div>
-                        <div class="stat-label">当前高度(mm)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="avgHeight">0</div>
-                        <div class="stat-label">平均高度(mm)</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value" id="heightCount">0</div>
-                        <div class="stat-label">测量次数</div>
-                    </div>
-                </div>
-                <div class="setting-item">
-                    <label for="heightThreshold">高度阈值 (mm):</label>
-                    <input type="number" id="heightThreshold" name="heightThreshold" value="1000" min="100" max="5000" title="设置高度变化阈值">
-                </div>
-                <button type="button" class="btn btn-primary" id="clearHeightBtn">清除数据</button>
-            </div>
-        </div>
+    <!-- 全屏按钮 -->
+    <button class="fullscreen-button" id="fullscreenBtn" title="全屏显示">⛶</button>
+    
+    <!-- 全屏提示 -->
+    <div class="fullscreen-hint" id="fullscreenHint">
+        🔄 按 ESC 键退出全屏
     </div>
 
-        <div class="data-panel">
-            <div class="data-section">
-                <h3>📁 数据管理</h3>
-                <div class="file-input">
-                    <label for="importFile">选择数据文件:</label>
-                    <input type="file" id="importFile" name="importFile" accept=".txt,.csv" title="选择要导入的激光雷达数据文件">
-                    <button type="button" class="btn btn-primary" id="importBtn">导入数据</button>
-                </div>
-                <button type="button" class="btn btn-success" id="exportBtn">导出数据</button>
-                <button type="button" class="btn btn-warning" id="exportTreesBtn">导出树木信息</button>
+    <div class="fullscreen-container">
+        <!-- 开始界面 -->
+        <div class="screen start-screen active" id="startScreen">
+            <div class="start-content">
+                <h1 class="start-title">🌲 激光雷达树木检测系统</h1>
+                <p class="start-subtitle">HOKUYO URG-04LX-UG01 实时扫描与树木识别</p>
+                <button class="start-button" onclick="showLoadingScreen()">开始使用</button>
             </div>
+        </div>
 
-            <div class="data-section">
-                <h3>📈 高度变化图表</h3>
-                <div class="canvas-container" style="height: 300px;">
-                    <canvas id="heightChart"></canvas>
+        <!-- 加载界面 -->
+        <div class="screen loading-screen" id="loadingScreen">
+            <div class="loading-content">
+                <div class="loading-logo">🌲</div>
+                <h2 class="loading-title">系统初始化中</h2>
+                <p class="loading-subtitle">正在加载激光雷达检测系统...</p>
+                <div class="loading-progress">
+                    <div class="loading-progress-bar"></div>
                 </div>
-                <div style="margin-top: 10px; text-align: center;">
-                    <button type="button" class="btn btn-primary" id="exportHeightBtn">导出高度数据</button>
-                    <button type="button" class="btn btn-warning" id="resetHeightChartBtn">重置图表</button>
-                    <button type="button" class="btn btn-info" id="testHeightBtn" style="margin-left: 10px;">测试数据</button>
+                <div class="loading-spinner"></div>
+                <div class="loading-text" id="loadingText">正在初始化传感器...</div>
+            </div>
+        </div>
+
+        <!-- 主菜单界面 -->
+        <div class="screen main-menu" id="mainMenu">
+            <div class="menu-header">
+                <h1 class="menu-title">系统主菜单</h1>
+                <p class="menu-subtitle">选择您需要的功能模块</p>
+            </div>
+            <div class="menu-grid">
+                <div class="menu-card" onclick="showScreen('measurement2d')">
+                    <span class="menu-card-icon">📏</span>
+                    <h3 class="menu-card-title">二维测量界面</h3>
+                    <p class="menu-card-desc">激光雷达平面扫描，树木检测与测量</p>
+                </div>
+                <div class="menu-card" onclick="showScreen('measurement3d')">
+                    <span class="menu-card-icon">📐</span>
+                    <h3 class="menu-card-title">三维测量界面</h3>
+                    <p class="menu-card-desc">立体扫描分析，三维建模与测量</p>
+                </div>
+                <div class="menu-card" onclick="showScreen('forestDetection')">
+                    <span class="menu-card-icon">🌲</span>
+                    <h3 class="menu-card-title">林场探测界面</h3>
+                    <p class="menu-card-desc">大面积林场扫描，森林资源调查</p>
+                </div>
+                <div class="menu-card" onclick="showScreen('systemInfo')">
+                    <span class="menu-card-icon">ℹ️</span>
+                    <h3 class="menu-card-title">系统介绍</h3>
+                    <p class="menu-card-desc">系统功能说明，使用指南</p>
+                </div>
+                <div class="menu-card" onclick="showScreen('historyRecords')">
+                    <span class="menu-card-icon">📊</span>
+                    <h3 class="menu-card-title">历史记录</h3>
+                    <p class="menu-card-desc">查看历史扫描数据和分析结果</p>
                 </div>
             </div>
+        </div>
 
-            <div class="data-section">
-                <h3>📊 系统日志</h3>
-                <div class="log-area" id="logArea">
-                    <div class="log-entry log-info">[INFO] 系统已启动，等待连接...</div>
+        <!-- 二维测量界面 -->
+        <div class="screen sub-screen" id="measurement2d">
+            <div class="sub-header">
+                <h2 class="sub-title">📏 二维测量界面</h2>
+                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+            </div>
+            <div class="sub-content">
+                <div class="measurement-2d">
+                    <div class="visualization-panel">
+                        <div class="canvas-header">
+                            <h3>🌐 激光雷达扫描视图</h3>
+                            <div class="view-controls">
+                                <button class="btn" id="resetViewBtn">重置视图</button>
+                                <button class="btn" id="toggleGridBtn">网格</button>
+                                <button class="btn" id="toggleLabelsBtn">标签</button>
+                                <button class="btn" id="rotateViewBtn">旋转90°</button>
+                                <button class="btn" id="testBtn">测试</button>
+                            </div>
+                        </div>
+                        <div class="canvas-container">
+                            <canvas id="scanCanvas"></canvas>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value" id="treeCount">0</div>
+                                <div class="stat-label">检测树木</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="scanPoints">0</div>
+                                <div class="stat-label">扫描点数</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="avgDiameter">0</div>
+                                <div class="stat-label">平均直径</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="scanTime">0</div>
+                                <div class="stat-label">扫描时间</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="currentHeightDisplay">0</div>
+                                <div class="stat-label">当前高度(mm)</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="heightAccuracy">--</div>
+                                <div class="stat-label">高度精度</div>
+                            </div>
+                        </div>
+                        <div style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4caf50;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 0.9em; color: #2e7d32; font-weight: 600;">
+                                    📏 标准测量高度: 1.3m (1300mm)
+                                </span>
+                                <span id="heightIndicator" style="font-size: 0.8em; color: #666;">
+                                    等待测量...
+                                </span>
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <div style="background: rgba(255,255,255,0.5); height: 6px; border-radius: 3px; overflow: hidden;">
+                                    <div id="heightProgressBar" style="background: linear-gradient(90deg, #4caf50, #8bc34a); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-panel">
+                        <div class="control-section">
+                            <h3>🔗 连接控制</h3>
+                            <div class="status-indicator">
+                                <div class="status-dot status-disconnected" id="statusDot"></div>
+                                <span id="statusText">未连接</span>
+                            </div>
+                            <button class="btn btn-primary" id="connectBtn">连接激光雷达</button>
+                            <button class="btn btn-danger" id="disconnectBtn" disabled>断开连接</button>
+                        </div>
+                        <div class="control-section">
+                            <h3>📡 扫描控制</h3>
+                            <button class="btn btn-success" id="startScanBtn" disabled>开始扫描</button>
+                            <button class="btn btn-warning" id="pauseScanBtn" disabled>暂停扫描</button>
+                            <button class="btn btn-primary" id="singleScanBtn" disabled>单次扫描</button>
+                        </div>
+                        <div class="control-section">
+                            <h3>🌳 树木检测</h3>
+                            <button class="btn btn-success" id="detectTreesBtn" disabled>检测树木</button>
+                            <button class="btn btn-primary" id="clearTreesBtn">清除结果</button>
+                            <button class="btn btn-warning" id="debugBtn" disabled>调试数据</button>
+                        </div>
+                        <div class="control-section">
+                            <h3>📏 STP-23L高度测量</h3>
+                            <div class="status-indicator">
+                                <div class="status-dot status-disconnected" id="stp23lStatusDot"></div>
+                                <span id="stp23lStatusText">未连接</span>
+                            </div>
+                            <button class="btn btn-primary" id="stp23lConnectBtn">连接STP-23L</button>
+                            <button class="btn btn-danger" id="stp23lDisconnectBtn" disabled>断开连接</button>
+                            <button class="btn btn-success" id="stp23lStartBtn" disabled>开始测量</button>
+                            <button class="btn btn-warning" id="stp23lStopBtn" disabled>停止测量</button>
+                        </div>
+                        <div class="control-section">
+                            <h3>📊 高度数据</h3>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value" id="currentHeight">0</div>
+                                    <div class="stat-label">当前高度(mm)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="avgHeight">0</div>
+                                    <div class="stat-label">平均高度(mm)</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="heightCount">0</div>
+                                    <div class="stat-label">测量次数</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-value" id="heightStatus">--</div>
+                                    <div class="stat-label">测量状态</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;">
+                                <label style="font-size: 0.9em; color: #4a5568;">标准测量高度: 1.3m (1300mm)</label>
+                                <div style="background: rgba(76, 175, 80, 0.1); padding: 8px; border-radius: 6px; margin-top: 5px; border-left: 3px solid #4caf50;">
+                                    <span style="font-size: 0.8em; color: #2e7d32;">
+                                        <strong>标准树径测量：</strong>在距离地面1.3米高度处测量树木直径
+                                    </span>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="clearHeightBtn" style="margin-top: 10px;">清除高度数据</button>
+                        </div>
+                        <div class="control-section">
+                            <h3>📊 系统日志</h3>
+                            <div class="log-area" id="logArea" style="height: 120px; background: #0f1412; color: #eef3f7; padding: 10px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.12); overflow-y: auto;">
+                                <div class="log-entry log-info">[INFO] 系统已启动，等待连接...</div>
+                            </div>
+                            <button class="btn btn-primary" id="clearLogBtn" style="margin-top: 8px;">清除日志</button>
+                        </div>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-primary" id="clearLogBtn">清除日志</button>
+            </div>
+        </div>
+
+        <!-- 三维测量界面 -->
+        <div class="screen sub-screen" id="measurement3d">
+            <div class="sub-header">
+                <h2 class="sub-title">📐 三维测量界面</h2>
+                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+            </div>
+            <div class="sub-content">
+                <div class="measurement-3d">
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">📐</div>
+                        <h3 class="placeholder-title">三维扫描功能</h3>
+                        <p class="placeholder-desc">此功能正在开发中，将提供立体扫描、三维建模和体积测量功能。</p>
+                    </div>
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">🎯</div>
+                        <h3 class="placeholder-title">三维分析</h3>
+                        <p class="placeholder-desc">支持三维点云处理、立体几何分析和空间测量。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 林场探测界面 -->
+        <div class="screen sub-screen" id="forestDetection">
+            <div class="sub-header">
+                <h2 class="sub-title">🌲 林场探测界面</h2>
+                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+            </div>
+            <div class="sub-content">
+                <div class="forest-detection">
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">🌲</div>
+                        <h3 class="placeholder-title">大面积扫描</h3>
+                        <p class="placeholder-desc">支持大面积林场扫描，自动路径规划和区域覆盖。</p>
+                    </div>
+                    <div class="placeholder-content">
+                        <div class="placeholder-icon">📊</div>
+                        <h3 class="placeholder-title">森林资源分析</h3>
+                        <p class="placeholder-desc">提供森林密度分析、树种识别和资源统计功能。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统介绍界面 -->
+        <div class="screen sub-screen" id="systemInfo">
+            <div class="sub-header">
+                <h2 class="sub-title">ℹ️ 系统介绍</h2>
+                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+            </div>
+            <div class="sub-content">
+                <div class="system-info">
+                    <div class="info-card">
+                        <h3>系统概述</h3>
+                        <p>本系统基于HOKUYO URG-04LX-UG01激光雷达传感器，专门用于树木检测和测量。系统采用先进的点云处理算法，能够实时识别和测量树木的直径、位置等参数。</p>
+                        <p>支持多种测量模式，包括单点测量、连续扫描和大面积探测，满足不同应用场景的需求。</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>主要功能</h3>
+                        <p><strong>二维测量：</strong>平面扫描，树木检测与直径测量</p>
+                        <p><strong>三维测量：</strong>立体扫描，三维建模与体积测量</p>
+                        <p><strong>林场探测：</strong>大面积扫描，森林资源调查</p>
+                        <p><strong>数据管理：</strong>数据导入导出，历史记录查看</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>技术参数</h3>
+                        <p><strong>扫描范围：</strong>20mm - 5600mm</p>
+                        <p><strong>角度范围：</strong>240°</p>
+                        <p><strong>扫描频率：</strong>10Hz</p>
+                        <p><strong>精度：</strong>±30mm</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>使用说明</h3>
+                        <p>1. 连接激光雷达设备</p>
+                        <p>2. 选择相应的测量模式</p>
+                        <p>3. 开始扫描并观察实时数据</p>
+                        <p>4. 分析结果并导出数据</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录界面 -->
+        <div class="screen sub-screen" id="historyRecords">
+            <div class="sub-header">
+                <h2 class="sub-title">📊 历史记录</h2>
+                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+            </div>
+            <div class="sub-content">
+                <div class="history-records">
+                    <div class="records-list">
+                        <div class="record-item">
+                            <div class="record-header">
+                                <span class="record-date">2024-01-15 14:30</span>
+                                <span class="record-type">二维扫描</span>
+                            </div>
+                            <div class="record-details">
+                                检测到 12 棵树木，平均直径 156mm，扫描点数 1080
+                            </div>
+                        </div>
+                        <div class="record-item">
+                            <div class="record-header">
+                                <span class="record-date">2024-01-15 10:15</span>
+                                <span class="record-type">单点测量</span>
+                            </div>
+                            <div class="record-details">
+                                STP-23L传感器测量，高度 1250mm，测量次数 50
+                            </div>
+                        </div>
+                        <div class="record-item">
+                            <div class="record-header">
+                                <span class="record-date">2024-01-14 16:45</span>
+                                <span class="record-type">系统测试</span>
+                            </div>
+                            <div class="record-details">
+                                系统校准测试，扫描范围验证，数据质量检查
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script src="lidar-system.js"></script>
+    <script>
+        // 界面切换功能
+        function showScreen(screenId) {
+            // 隐藏所有界面
+            const screens = document.querySelectorAll('.screen');
+            screens.forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // 显示目标界面
+            const targetScreen = document.getElementById(screenId);
+            if (targetScreen) {
+                targetScreen.classList.add('active');
+            }
+        }
+
+        function showLoadingScreen() {
+            showScreen('loadingScreen');
+            startLoadingSequence();
+        }
+
+        function showMainMenu() {
+            showScreen('mainMenu');
+        }
+
+        // 加载序列
+        function startLoadingSequence() {
+            const loadingText = document.getElementById('loadingText');
+            const loadingSteps = [
+                { text: '正在初始化传感器...', delay: 500 },
+                { text: '正在连接激光雷达...', delay: 800 },
+                { text: '正在校准测量系统...', delay: 600 },
+                { text: '正在加载检测算法...', delay: 700 },
+                { text: '正在准备用户界面...', delay: 500 },
+                { text: '系统初始化完成！', delay: 300 }
+            ];
+
+            let currentStep = 0;
+            
+            function nextStep() {
+                if (currentStep < loadingSteps.length) {
+                    const step = loadingSteps[currentStep];
+                    loadingText.textContent = step.text;
+                    currentStep++;
+                    setTimeout(nextStep, step.delay);
+                } else {
+                    // 加载完成，显示主菜单
+                    setTimeout(() => {
+                        showMainMenu();
+                    }, 500);
+                }
+            }
+            
+            // 开始加载序列
+            setTimeout(nextStep, 500);
+        }
+
+        // 全屏功能
+        let isFullscreen = false;
+
+        function toggleFullscreen() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            const fullscreenHint = document.getElementById('fullscreenHint');
+            
+            if (!isFullscreen) {
+                // 进入全屏
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen();
+                } else if (document.documentElement.webkitRequestFullscreen) {
+                    document.documentElement.webkitRequestFullscreen();
+                } else if (document.documentElement.msRequestFullscreen) {
+                    document.documentElement.msRequestFullscreen();
+                } else if (document.documentElement.mozRequestFullScreen) {
+                    document.documentElement.mozRequestFullScreen();
+                }
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                }
+            }
+        }
+
+        function updateFullscreenButton() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (isFullscreen) {
+                fullscreenBtn.textContent = '⛶';
+                fullscreenBtn.title = '退出全屏';
+                fullscreenBtn.classList.add('fullscreen');
+            } else {
+                fullscreenBtn.textContent = '⛶';
+                fullscreenBtn.title = '全屏显示';
+                fullscreenBtn.classList.remove('fullscreen');
+            }
+        }
+
+        function showFullscreenHint() {
+            const fullscreenHint = document.getElementById('fullscreenHint');
+            fullscreenHint.classList.add('show');
+            setTimeout(() => {
+                fullscreenHint.classList.remove('show');
+            }, 3000); // 延长显示时间到3秒
+        }
+
+        // 监听全屏状态变化
+        document.addEventListener('fullscreenchange', function() {
+            isFullscreen = !!document.fullscreenElement;
+            updateFullscreenButton();
+            if (isFullscreen) {
+                showFullscreenHint();
+            }
+        });
+
+        document.addEventListener('webkitfullscreenchange', function() {
+            isFullscreen = !!document.webkitFullscreenElement;
+            updateFullscreenButton();
+            if (isFullscreen) {
+                showFullscreenHint();
+            }
+        });
+
+        document.addEventListener('mozfullscreenchange', function() {
+            isFullscreen = !!document.mozFullScreenElement;
+            updateFullscreenButton();
+            if (isFullscreen) {
+                showFullscreenHint();
+            }
+        });
+
+        document.addEventListener('MSFullscreenChange', function() {
+            isFullscreen = !!document.msFullscreenElement;
+            updateFullscreenButton();
+            if (isFullscreen) {
+                showFullscreenHint();
+            }
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                if (isFullscreen) {
+                    // 如果当前是全屏状态，退出全屏
+                    toggleFullscreen();
+                } else {
+                    // 如果不是全屏，执行原来的返回菜单逻辑
+                    const currentScreen = document.querySelector('.screen.active');
+                    if (currentScreen && currentScreen.id !== 'startScreen' && currentScreen.id !== 'mainMenu') {
+                        showMainMenu();
+                    }
+                }
+            }
+        });
+
+        // 高度测量相关变量
+        let heightData = {
+            current: 0,
+            average: 0,
+            count: 0,
+            isMeasuring: false,
+            targetHeight: 1300, // 1.3米标准高度
+            measurements: []
+        };
+
+        // 高度测量功能
+        function updateHeightDisplay() {
+            document.getElementById('currentHeight').textContent = heightData.current;
+            document.getElementById('currentHeightDisplay').textContent = heightData.current;
+            document.getElementById('avgHeight').textContent = Math.round(heightData.average);
+            document.getElementById('heightCount').textContent = heightData.count;
+            
+            // 更新高度状态
+            const heightStatus = document.getElementById('heightStatus');
+            const heightIndicator = document.getElementById('heightIndicator');
+            const progressBar = document.getElementById('heightProgressBar');
+            
+            if (heightData.isMeasuring) {
+                heightStatus.textContent = '测量中';
+                heightIndicator.textContent = '正在测量...';
+                heightIndicator.style.color = '#4caf50';
+            } else if (heightData.count > 0) {
+                heightStatus.textContent = '已测量';
+                const accuracy = Math.abs(heightData.current - heightData.targetHeight);
+                document.getElementById('heightAccuracy').textContent = `±${accuracy}mm`;
+                
+                if (accuracy <= 50) {
+                    heightIndicator.textContent = '✓ 高度准确';
+                    heightIndicator.style.color = '#4caf50';
+                    progressBar.style.width = '100%';
+                    progressBar.className = 'height-progress-bar';
+                } else if (accuracy <= 100) {
+                    heightIndicator.textContent = '⚠ 高度接近';
+                    heightIndicator.style.color = '#ff9800';
+                    progressBar.style.width = '75%';
+                    progressBar.className = 'height-progress-bar warning';
+                } else {
+                    heightIndicator.textContent = '✗ 高度偏差';
+                    heightIndicator.style.color = '#f44336';
+                    progressBar.style.width = '25%';
+                    progressBar.className = 'height-progress-bar error';
+                }
+            } else {
+                heightStatus.textContent = '未测量';
+                heightIndicator.textContent = '等待测量...';
+                heightIndicator.style.color = '#666';
+                progressBar.style.width = '0%';
+                progressBar.className = 'height-progress-bar';
+            }
+        }
+
+        // STP-23L传感器控制
+        function initSTP23LControls() {
+            const connectBtn = document.getElementById('stp23lConnectBtn');
+            const disconnectBtn = document.getElementById('stp23lDisconnectBtn');
+            const startBtn = document.getElementById('stp23lStartBtn');
+            const stopBtn = document.getElementById('stp23lStopBtn');
+            const clearBtn = document.getElementById('clearHeightBtn');
+            const statusDot = document.getElementById('stp23lStatusDot');
+            const statusText = document.getElementById('stp23lStatusText');
+
+            connectBtn.addEventListener('click', function() {
+                // 模拟连接
+                statusDot.className = 'status-dot status-connected';
+                statusText.textContent = '已连接';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                startBtn.disabled = false;
+                
+                // 添加日志
+                addLog('STP-23L传感器已连接', 'success');
+            });
+
+            disconnectBtn.addEventListener('click', function() {
+                // 模拟断开
+                statusDot.className = 'status-dot status-disconnected';
+                statusText.textContent = '未连接';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = true;
+                
+                // 停止测量
+                heightData.isMeasuring = false;
+                updateHeightDisplay();
+                
+                addLog('STP-23L传感器已断开', 'warning');
+            });
+
+            startBtn.addEventListener('click', function() {
+                heightData.isMeasuring = true;
+                statusDot.className = 'status-dot status-measuring';
+                statusText.textContent = '测量中';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                
+                // 开始模拟测量
+                simulateHeightMeasurement();
+                
+                addLog('开始高度测量', 'info');
+            });
+
+            stopBtn.addEventListener('click', function() {
+                heightData.isMeasuring = false;
+                statusDot.className = 'status-dot status-connected';
+                statusText.textContent = '已连接';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                
+                updateHeightDisplay();
+                
+                addLog('停止高度测量', 'warning');
+            });
+
+            clearBtn.addEventListener('click', function() {
+                heightData = {
+                    current: 0,
+                    average: 0,
+                    count: 0,
+                    isMeasuring: false,
+                    targetHeight: 1300,
+                    measurements: []
+                };
+                updateHeightDisplay();
+                
+                addLog('高度数据已清除', 'info');
+            });
+        }
+
+        // 清除日志功能
+        function initLogControls() {
+            const clearLogBtn = document.getElementById('clearLogBtn');
+            if (clearLogBtn) {
+                clearLogBtn.addEventListener('click', function() {
+                    const logArea = document.getElementById('logArea');
+                    if (logArea) {
+                        logArea.innerHTML = '<div class="log-entry log-info">[INFO] 日志已清除</div>';
+                    }
+                });
+            }
+        }
+
+        // 模拟高度测量
+        function simulateHeightMeasurement() {
+            if (!heightData.isMeasuring) return;
+            
+            // 模拟测量数据（在1200-1400mm之间）
+            const measurement = 1200 + Math.random() * 200;
+            heightData.current = Math.round(measurement);
+            heightData.measurements.push(measurement);
+            heightData.count++;
+            
+            // 计算平均值
+            heightData.average = heightData.measurements.reduce((a, b) => a + b, 0) / heightData.measurements.length;
+            
+            updateHeightDisplay();
+            
+            // 每秒测量一次
+            setTimeout(simulateHeightMeasurement, 1000);
+        }
+
+        // 添加日志功能
+        function addLog(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            if (!logArea) return;
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        // 字体加载检测
+        function checkFontsLoaded() {
+            if (document.fonts && document.fonts.ready) {
+                document.fonts.ready.then(function() {
+                    document.documentElement.classList.add('fonts-loaded');
+                });
+            } else {
+                // 回退方案
+                setTimeout(function() {
+                    document.documentElement.classList.add('fonts-loaded');
+                }, 1000);
+            }
+        }
+
+        // 初始化Canvas 1:1比例
+        function initCanvas() {
+            const canvas = document.getElementById('scanCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // 根据屏幕尺寸设置canvas尺寸（4:3比例）
+            function setCanvasSize() {
+                const screenWidth = window.innerWidth;
+                let canvasWidth, canvasHeight;
+                
+                if (screenWidth <= 480) {
+                    canvasWidth = 300;
+                    canvasHeight = 225; // 4:3比例
+                } else if (screenWidth <= 768) {
+                    canvasWidth = 350;
+                    canvasHeight = 263; // 4:3比例
+                } else {
+                    canvasWidth = 400;
+                    canvasHeight = 300; // 4:3比例
+                }
+                
+                // 设置canvas的实际尺寸为4:3比例
+                canvas.width = canvasWidth;
+                canvas.height = canvasHeight;
+                
+                // 设置显示尺寸为100%
+                canvas.style.width = '100%';
+                canvas.style.height = '100%';
+                
+                return { width: canvasWidth, height: canvasHeight };
+            }
+            
+            const canvasSize = setCanvasSize();
+            
+            // 设置坐标系统 - 4:3比例，中心为原点
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            // 绘制坐标轴和网格
+            function drawGrid() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 设置样式
+                ctx.strokeStyle = 'rgba(0,0,0,0.1)';
+                ctx.lineWidth = 1;
+                
+                // 绘制网格线
+                const gridSize = 20; // 20像素一格
+                for (let x = 0; x <= canvas.width; x += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                }
+                
+                for (let y = 0; y <= canvas.height; y += gridSize) {
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                }
+                
+                // 绘制坐标轴
+                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.lineWidth = 2;
+                
+                // X轴
+                ctx.beginPath();
+                ctx.moveTo(0, centerY);
+                ctx.lineTo(canvas.width, centerY);
+                ctx.stroke();
+                
+                // Y轴
+                ctx.beginPath();
+                ctx.moveTo(centerX, 0);
+                ctx.lineTo(centerX, canvas.height);
+                ctx.stroke();
+                
+                // 绘制中心点
+                ctx.fillStyle = 'rgba(255,0,0,0.5)';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 绘制比例尺
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.font = '12px Arial';
+                ctx.fillText('4:3 比例', 10, 20);
+                ctx.fillText('中心: (0,0)', 10, 35);
+            }
+            
+            // 初始绘制网格
+            drawGrid();
+            
+            // 添加测试数据绘制功能
+            window.drawTestData = function() {
+                drawGrid();
+                
+                // 绘制一些测试点
+                ctx.fillStyle = 'rgba(0,172,193,0.8)';
+                const testPoints = [
+                    {x: centerX + 50, y: centerY - 30},
+                    {x: centerX - 40, y: centerY + 60},
+                    {x: centerX + 80, y: centerY + 20},
+                    {x: centerX - 60, y: centerY - 40}
+                ];
+                
+                testPoints.forEach(point => {
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                });
+                
+                // 绘制测试树木
+                ctx.fillStyle = 'rgba(76,175,80,0.8)';
+                ctx.beginPath();
+                ctx.arc(centerX + 30, centerY - 50, 8, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.beginPath();
+                ctx.arc(centerX - 70, centerY + 30, 6, 0, 2 * Math.PI);
+                ctx.fill();
+            };
+            
+            // 监听窗口大小变化
+            window.addEventListener('resize', function() {
+                const newSize = setCanvasSize();
+                drawGrid();
+            });
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('激光雷达树木检测系统已启动');
+            
+            // 检查字体加载
+            checkFontsLoaded();
+            
+            // 初始化Canvas
+            initCanvas();
+            
+            // 初始化高度测量
+            updateHeightDisplay();
+            initSTP23LControls();
+            initLogControls();
+            
+            // 初始化全屏按钮
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', toggleFullscreen);
+            }
+            
+            // 添加初始日志
+            addLog('系统已启动，等待连接...', 'info');
+        });
+    </script>
 </body>
 </html>
