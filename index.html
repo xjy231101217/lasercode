@@ -80,45 +80,154 @@
 
         /* 开始界面 */
         .start-screen {
-            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            background: linear-gradient(135deg, rgba(26, 47, 26, 0.6) 0%, rgba(13, 31, 13, 0.6) 50%, rgba(10, 26, 10, 0.7) 100%), url('../公路森林.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             justify-content: center;
-            align-items: center;
-            text-align: center;
+            align-items: flex-start;
+            text-align: left;
+            padding: 0 40px;
+            overflow: hidden; /* 为粒子与视差层提供裁剪 */
+        }
+
+        /* 视差层：轻微移动的光斑纹理 */
+        .parallax-layer {
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            pointer-events: none;
+            background: radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.08), transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(255, 255, 255, 0.06), transparent 45%);
+            filter: blur(1px) saturate(1.05);
+            transition: transform 0.15s ease-out;
         }
 
         .start-content {
             opacity: 1;
             animation: fadeInUp 0.4s ease-out forwards;
+            background: none;
+            border: none;
+            box-shadow: none;
+            border-radius: 0;
+            padding: 0;
+            margin-top: -16px; /* 整体上移一格 */
+            max-width: 80vw;
         }
 
         .start-title {
-            font-size: 4rem;
+            font-size: 5rem;
             font-weight: 700;
-            color: var(--color-gold);
-            text-shadow: 0 0 15px rgba(212, 182, 106, 0.4);
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            font-family: 'Cinzel', 'Microsoft YaHei', Arial, sans-serif;
             margin-bottom: 1rem;
+            animation: titleGlow 4s ease-in-out infinite;
         }
 
         .start-subtitle {
-            font-size: 1.5rem;
-            color: var(--color-lake);
+            font-size: 2rem;
+            color: #fff;
             margin-bottom: 3rem;
-            opacity: 0.9;
+            opacity: 1;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.5);
+            font-family: 'Cinzel', 'Microsoft YaHei', Arial, sans-serif;
+        }
+
+        /* 标题微弱发光脉冲 */
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 0px rgba(212, 182, 106, 0.0); }
+            50% { text-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(212, 182, 106, 0.35); }
         }
 
         .start-button {
-            background: linear-gradient(135deg, var(--color-gold), #f2e6b8);
-            color: #2a2100;
+            background: #ffffff;
+            color: #000000;
             border: none;
-            padding: 28px 60px;
-            font-size: 1.6rem;
+            padding: 18px 88px;
+            padding-left: calc(88px - 2ch); /* 文字左移约两个字符 */
+            font-size: 2.2rem;
             font-weight: 600;
             border-radius: 50px;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            box-shadow: 0 8px 25px rgba(212, 182, 106, 0.3);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            position: relative;
+            overflow: hidden; /* 裁剪ripple */
+        }
+
+        .start-button .btn-text {
+            display: inline-block;
+        }
+
+        .start-button .arrow-icon {
+            margin-left: auto;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--color-gold);
+            color: #2a2100;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        /* 悬停上浮/阴影增强，按下回弹 */
+        .start-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.35);
+        }
+        .start-button:active {
+            transform: translateY(-1px) scale(0.99);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 点击涟漪元素样式 */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            transform: scale(0);
+            background: rgba(0, 0, 0, 0.15);
+            animation: ripple 600ms ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes ripple {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* 少量浮动粒子 */
+        .floating-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.35);
+            border-radius: 50%;
+            filter: blur(0.5px);
+            animation: floatParticle linear infinite;
+        }
+        @keyframes floatParticle {
+            0% { transform: translate3d(0, 0, 0); opacity: 0; }
+            10% { opacity: 1; }
+            100% { transform: translate3d(300px, 220px, 0); opacity: 0; }
         }
 
         .start-button:hover {
@@ -136,51 +245,122 @@
             justify-content: center;
             align-items: center;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 加载界面模糊背景图 */
+        .loading-screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('../公路森林.jpg') center / cover no-repeat;
+            filter: blur(10px);
+            transform: scale(1.06); /* 避免模糊边缘可见 */
+            opacity: 0.75;
+            z-index: 0;
         }
 
         .loading-content {
             opacity: 1;
             animation: fadeInUp 0.3s ease-out forwards;
+            position: relative;
+            z-index: 1;
         }
 
         .loading-logo {
             font-size: 3rem;
             margin-bottom: 2rem;
             animation: pulse 2s ease-in-out infinite;
+            /* 调整为更淡的绿色观感 */
+            filter: brightness(1.35) saturate(1.2);
+            /* 位置下移一些 */
+            margin-top: 0.8rem;
         }
 
         .loading-title {
             font-size: 2rem;
-            font-weight: 600;
-            color: var(--color-gold);
+            font-weight: 700;
+            color: #ffffff;
             margin-bottom: 1rem;
-            text-shadow: 0 0 10px rgba(212, 182, 106, 0.3);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
         .loading-subtitle {
-            font-size: 1rem;
-            color: var(--color-lake);
-            margin-bottom: 2rem;
-            opacity: 0.8;
+            font-size: 1.3rem;
+            color: #ffffff;
+            margin-bottom: 1.2rem;
+            opacity: 0.95;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.45);
         }
 
         .loading-progress {
             width: 300px;
-            height: 6px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 3px;
+            height: 8px; /* 更细 */
+            background: rgba(255,255,255,0.15);
+            border-radius: 6px;
             overflow: hidden;
-            margin: 0 auto 1rem;
+            margin: 0 auto 0.6rem;
             position: relative;
         }
 
         .loading-progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, var(--color-gold), var(--color-lake));
-            border-radius: 3px;
+            background: #A5D6A7; /* 淡绿色 */
+            border-radius: 6px;
             width: 0%;
-            animation: loadingProgress 3s ease-out forwards;
+            animation: loadingProgress 2s ease-out forwards; /* 与切换时长同步 */
             position: relative;
+        }
+
+        /* 小树图标，随进度移动 */
+        .loading-tree {
+            position: absolute;
+            top: 62%; /* 往下移动一点 */
+            left: 0;
+            transform: translateY(-50%);
+            width: 32px; /* 更大 */
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            font-size: 20px; /* 图标更大 */
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            animation: loadingTree 2s ease-out forwards; /* 与切换时长同步 */
+            user-select: none;
+            pointer-events: none;
+        }
+        @keyframes loadingTree {
+            0% { left: 0; }
+            100% { left: calc(100% - 32px); }
+        }
+
+        /* Loding······ 文本动态效果 */
+        .loading-dots {
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-shadow: 0 1px 6px rgba(0,0,0,0.45);
+            font-family: 'Arial Rounded MT', 'Helvetica Rounded', 'Microsoft YaHei', Arial, sans-serif;
+        }
+        .loading-dots .text { font-size: 1.25rem; }
+        .loading-dots .dots::after {
+            content: '';
+            animation: dots 1.2s steps(6, end) infinite;
+            display: inline-block;
+            width: 6ch; /* 预留宽度避免抖动 */
+            text-align: left;
+        }
+        @keyframes dots {
+            0% { content: ''; }
+            16% { content: '·'; }
+            32% { content: '··'; }
+            48% { content: '···'; }
+            64% { content: '····'; }
+            80% { content: '·····'; }
+            100% { content: '······'; }
         }
 
         .loading-progress-bar::after {
@@ -402,6 +582,7 @@
         .fullscreen-hint.show {
             opacity: 1;
             visibility: visible;
+            transition: opacity 0.6s ease, visibility 0.6s ease; /* 更柔和 */
         }
 
         .sub-content {
@@ -863,10 +1044,15 @@
     <div class="fullscreen-container">
         <!-- 开始界面 -->
         <div class="screen start-screen active" id="startScreen">
+            <div class="parallax-layer" id="parallaxLayer"></div>
+            <div class="floating-particles" id="floatingParticles"></div>
             <div class="start-content">
-                <h1 class="start-title">🌲 激光雷达树木检测系统</h1>
+                <h1 class="start-title">激光雷达树木检测系统</h1>
                 <p class="start-subtitle">HOKUYO URG-04LX-UG01 实时扫描与树木识别</p>
-                <button class="start-button" onclick="showLoadingScreen()">开始使用</button>
+                <button class="start-button" onclick="showLoadingScreen()">
+                    <span class="btn-text">开始使用</span>
+                    <span class="arrow-icon">➜</span>
+                </button>
             </div>
         </div>
 
@@ -878,9 +1064,9 @@
                 <p class="loading-subtitle">正在加载激光雷达检测系统...</p>
                 <div class="loading-progress">
                     <div class="loading-progress-bar"></div>
+                    <div class="loading-tree">🌲</div>
                 </div>
-                <div class="loading-spinner"></div>
-                <div class="loading-text" id="loadingText">正在初始化传感器...</div>
+                <div class="loading-dots"><span class="text">Loding</span><span class="dots"></span></div>
             </div>
         </div>
 
@@ -1210,34 +1396,10 @@
 
         // 加载序列
         function startLoadingSequence() {
-            const loadingText = document.getElementById('loadingText');
-            const loadingSteps = [
-                { text: '正在初始化传感器...', delay: 500 },
-                { text: '正在连接激光雷达...', delay: 800 },
-                { text: '正在校准测量系统...', delay: 600 },
-                { text: '正在加载检测算法...', delay: 700 },
-                { text: '正在准备用户界面...', delay: 500 },
-                { text: '系统初始化完成！', delay: 300 }
-            ];
-
-            let currentStep = 0;
-            
-            function nextStep() {
-                if (currentStep < loadingSteps.length) {
-                    const step = loadingSteps[currentStep];
-                    loadingText.textContent = step.text;
-                    currentStep++;
-                    setTimeout(nextStep, step.delay);
-                } else {
-                    // 加载完成，显示主菜单
-                    setTimeout(() => {
-                        showMainMenu();
-                    }, 500);
-                }
-            }
-            
-            // 开始加载序列
-            setTimeout(nextStep, 500);
+            // 2秒后自动切换到主菜单
+            setTimeout(() => {
+                showMainMenu();
+            }, 2000);
         }
 
         // 全屏功能
@@ -1692,6 +1854,69 @@
             
             // 添加初始日志
             addLog('系统已启动，等待连接...', 'info');
+
+            // 视差层 - 鼠标/设备倾斜响应
+            const parallax = document.getElementById('parallaxLayer');
+            const startScreen = document.getElementById('startScreen');
+            function handleParallax(xRatio, yRatio) {
+                if (!parallax) return;
+                const maxTranslate = 18; // 最大平移像素
+                const tx = (xRatio - 0.5) * maxTranslate;
+                const ty = (yRatio - 0.5) * maxTranslate;
+                parallax.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+            }
+            startScreen.addEventListener('mousemove', function(e) {
+                const rect = startScreen.getBoundingClientRect();
+                const xRatio = (e.clientX - rect.left) / rect.width;
+                const yRatio = (e.clientY - rect.top) / rect.height;
+                handleParallax(xRatio, yRatio);
+            });
+            if (window.DeviceOrientationEvent) {
+                window.addEventListener('deviceorientation', function(ev) {
+                    // 将设备倾斜角度映射到 0-1 范围
+                    const xRatio = Math.min(Math.max((ev.gamma + 45) / 90, 0), 1);
+                    const yRatio = Math.min(Math.max((ev.beta + 45) / 90, 0), 1);
+                    handleParallax(xRatio, yRatio);
+                });
+            }
+
+            // 浮动粒子生成
+            const particlesContainer = document.getElementById('floatingParticles');
+            if (particlesContainer) {
+                const PARTICLE_COUNT = 16;
+                for (let i = 0; i < PARTICLE_COUNT; i++) {
+                    const p = document.createElement('span');
+                    p.className = 'particle';
+                    const startX = Math.random() * window.innerWidth * 0.3; // 左侧 30%
+                    const startY = Math.random() * window.innerHeight * 0.4; // 上方 40%
+                    const delay = Math.random() * 6;
+                    const duration = 10 + Math.random() * 10; // 10-20s
+                    const scale = 0.7 + Math.random() * 0.8; // 0.7-1.5
+                    p.style.left = `${startX}px`;
+                    p.style.top = `${startY}px`;
+                    p.style.opacity = `${0.2 + Math.random() * 0.5}`;
+                    p.style.transform = `scale(${scale})`;
+                    p.style.animationDuration = `${duration}s`;
+                    p.style.animationDelay = `${delay}s`;
+                    particlesContainer.appendChild(p);
+                }
+            }
+
+            // 按钮点击涟漪
+            const startBtn = document.querySelector('.start-button');
+            if (startBtn) {
+                startBtn.addEventListener('click', function(e) {
+                    const rect = startBtn.getBoundingClientRect();
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    const size = Math.max(rect.width, rect.height);
+                    ripple.style.width = ripple.style.height = `${size}px`;
+                    ripple.style.left = `${e.clientX - rect.left - size / 2}px`;
+                    ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
+                    startBtn.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 650);
+                });
+            }
         });
     </script>
 </body>
