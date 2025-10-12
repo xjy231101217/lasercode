@@ -80,7 +80,7 @@
 
         /* 开始界面 */
         .start-screen {
-            background: linear-gradient(135deg, rgba(26, 47, 26, 0.6) 0%, rgba(13, 31, 13, 0.6) 50%, rgba(10, 26, 10, 0.7) 100%), url('../公路森林.jpg');
+            background: linear-gradient(135deg, rgba(26, 47, 26, 0.4) 0%, rgba(13, 31, 13, 0.5) 50%, rgba(10, 26, 10, 0.6) 100%), url('./images/公路森林.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -147,7 +147,6 @@
             color: #000000;
             border: none;
             padding: 18px 88px;
-            padding-left: calc(88px - 2ch); /* 文字左移约两个字符 */
             font-size: 2.2rem;
             font-weight: 600;
             border-radius: 50px;
@@ -158,10 +157,12 @@
             letter-spacing: 1px;
             display: inline-flex;
             align-items: center;
-            gap: 12px;
+            justify-content: space-between;
             text-align: left;
             position: relative;
             overflow: hidden; /* 裁剪ripple */
+            width: 100%;
+            max-width: 400px;
         }
 
         .start-button .btn-text {
@@ -169,17 +170,17 @@
         }
 
         .start-button .arrow-icon {
-            margin-left: auto;
-            width: 32px;
-            height: 32px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: var(--color-gold);
             color: #2a2100;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
+            font-size: 24px;
             line-height: 1;
+            flex-shrink: 0;
         }
 
         /* 悬停上浮/阴影增强，按下回弹 */
@@ -241,7 +242,10 @@
 
         /* 加载界面 */
         .loading-screen {
-            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            background: linear-gradient(135deg, rgba(26, 47, 26, 0.2) 0%, rgba(13, 31, 13, 0.3) 50%, rgba(10, 26, 10, 0.4) 100%), url('./images/迷雾森林.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             justify-content: center;
             align-items: center;
             text-align: center;
@@ -257,10 +261,10 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: url('../公路森林.jpg') center / cover no-repeat;
-            filter: blur(10px);
-            transform: scale(1.06); /* 避免模糊边缘可见 */
-            opacity: 0.75;
+            background: url('./images/迷雾森林.jpg') center / cover no-repeat;
+            filter: blur(8px) brightness(0.7) contrast(0.9) saturate(0.8);
+            transform: scale(1.05); /* 避免模糊边缘可见 */
+            opacity: 0.6;
             z-index: 0;
         }
 
@@ -407,7 +411,10 @@
 
         /* 主菜单界面 */
         .main-menu {
-            background: linear-gradient(135deg, #1a2f1a 0%, #0d1f0d 50%, #0a1a0a 100%);
+            background: linear-gradient(135deg, rgba(26, 47, 26, 0.3) 0%, rgba(13, 31, 13, 0.4) 50%, rgba(10, 26, 10, 0.5) 100%), url('./images/迷雾森林.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
             padding: 1rem;
             height: 100vh;
             overflow: hidden;
@@ -420,104 +427,218 @@
         }
 
         .menu-title {
-            font-size: 2rem;
-            color: var(--color-gold);
+            font-size: 3rem;
+            color: #ffffff;
             margin-bottom: 0.5rem;
-            text-shadow: 0 0 15px rgba(212, 182, 106, 0.3);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+            font-weight: 800;
         }
 
         .menu-subtitle {
-            font-size: 1rem;
+            font-size: 1.2rem;
             color: var(--color-lake);
-            opacity: 0.8;
+            opacity: 0.9;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3), 0 0 15px rgba(78, 205, 196, 0.3);
+            background: linear-gradient(135deg, #4ecdc4, #7fbf9e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 500;
         }
 
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            height: calc(100vh - 200px);
-            overflow: hidden;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            width: 100vw;
+            margin: 0;
+            height: calc(100vh - 120px);
+            overflow: visible;
+            padding: 0;
+            align-items: center;
+            justify-items: center;
         }
 
         .menu-card {
-            background: var(--paper);
-            border-radius: 15px;
-            padding: 1.5rem;
+            position: relative;
+            background: transparent;
+            border-radius: 0;
+            padding: 0;
             text-align: center;
             cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            border: 2px solid transparent;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.25);
-            color: var(--ink);
-            height: fit-content;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            border: none;
+            box-shadow: none;
+            color: #ffffff;
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            align-items: center;
+            overflow: visible;
+        }
+
+        .menu-card::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+            transform: scaleY(-1);
+            transform-origin: top;
+            opacity: 0.3;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .menu-card:hover {
-            transform: translateY(-3px);
-            border-color: var(--color-gold);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+            transform: scale(1.08);
+            opacity: 1;
         }
 
-        .menu-card-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.8rem;
-            display: block;
+        .menu-card:hover::after {
+            opacity: 0.5;
+            transform: scaleY(-1) scale(1.08);
+        }
+
+        .menu-card:hover .menu-card-content {
+            transform: translate(-50%, -50%) scale(1.02);
+        }
+
+        .menu-card:hover .menu-card-title {
+            text-shadow: 0 0 35px rgba(255, 255, 255, 0.7);
+            transform: scale(1.02);
+        }
+
+        .menu-card:hover .menu-card-desc {
+            text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            opacity: 1;
+            transform: scale(1.01);
+        }
+
+        .menu-card-number {
+            position: absolute;
+            top: -10%;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 8rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Arial Black', 'Microsoft YaHei', Arial, sans-serif;
+            z-index: 1;
+            pointer-events: none;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            background: transparent;
+            border-radius: 0;
+            backdrop-filter: none;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .menu-card:hover .menu-card-number {
+            color: rgba(255, 255, 255, 0.7);
+            text-shadow: 0 1px 5px rgba(0,0,0,0.4);
+            transform: scale(1.03);
+        }
+
+        .menu-card-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            width: 80%;
+            height: 50%;
+            background: transparent;
+            border-radius: 20px;
+            padding: 2rem;
+            gap: 1rem;
+            transition: all 0.3s ease;
         }
 
         .menu-card-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            color: var(--ink);
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            line-height: 1.2;
+            white-space: nowrap;
+            letter-spacing: 1px;
         }
 
         .menu-card-desc {
-            font-size: 0.8rem;
-            color: #666;
-            line-height: 1.3;
+            font-size: 1.1rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.4;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            margin: 0;
+            white-space: nowrap;
+            opacity: 1;
+            letter-spacing: 0.3px;
         }
 
         /* 子界面通用样式 */
         .sub-screen {
-            background: var(--paper);
-            color: var(--ink);
+            background: linear-gradient(135deg, rgba(26, 47, 26, 0.3) 0%, rgba(13, 31, 13, 0.4) 50%, rgba(10, 26, 10, 0.5) 100%), url('./images/迷雾森林.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #ffffff;
         }
 
         .sub-header {
-            background: linear-gradient(135deg, var(--color-gold), #f2e6b8);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
             padding: 1rem 2rem;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-start;
             align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            gap: 2rem;
         }
 
         .sub-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2a2100;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
         }
 
         .back-button {
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: #2a2100;
-            padding: 8px 20px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            padding: 10px 24px;
             border-radius: 25px;
             cursor: pointer;
-            transition: background 0.2s ease, transform 0.2s ease;
+            transition: all 0.3s ease;
             font-weight: 600;
+            font-size: 0.9rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .back-button:hover {
-            background: rgba(255,255,255,0.3);
-            transform: translateX(-1px);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
+            transform: translateX(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         /* 全屏按钮 */
@@ -604,20 +725,24 @@
         }
 
         .visualization-panel {
-            background: rgba(255,255,255,0.9);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
             padding: 1rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
         .control-panel {
-            background: rgba(255,255,255,0.9);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
             padding: 1rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow-y: auto;
             height: 100%;
         }
@@ -625,7 +750,7 @@
         .canvas-container {
             position: relative;
             width: 100%;
-            height: 300px; /* 4:3 比例，基于400px宽度 */
+            height: 50vh; /* 改为左边栏框的二分之一高度 */
             border: 2px solid rgba(76, 175, 80, 0.6);
             border-radius: 8px;
             overflow: hidden;
@@ -659,20 +784,49 @@
         }
 
         .btn {
-            padding: 8px 16px;
-            border: 1px solid rgba(0,0,0,0.18);
-            border-radius: 8px;
+            padding: 10px 18px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.15s ease, box-shadow 0.15s ease;
-            background: linear-gradient(135deg, #d9c48b, var(--color-gold));
-            color: #2a2100;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.12));
+            backdrop-filter: blur(15px);
+            color: #ffffff;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
         }
 
         .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.18));
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:active {
+            transform: translateY(-1px) scale(1.01);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .btn-primary { background: linear-gradient(135deg, #358eaa, var(--color-lake)); color: #071113; }
@@ -685,11 +839,12 @@
         }
 
         .control-section h3 {
-            color: #4a5568;
+            color: #ffffff;
             margin-bottom: 1rem;
             font-size: 1rem;
-            border-bottom: 2px solid #e2e8f0;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.2);
             padding-bottom: 5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .status-indicator {
@@ -698,8 +853,10 @@
             margin: 10px 0;
             padding: 10px;
             border-radius: 10px;
-            background: rgba(255,255,255,0.7);
-            border: 1px solid rgba(0,0,0,0.12);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
         }
 
         .status-dot {
@@ -778,23 +935,56 @@
         }
 
         .stat-card {
-            background: linear-gradient(180deg, rgba(255,255,255,0.75), rgba(255,255,255,0.4));
-            padding: 8px;
-            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 18px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.12), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            padding: 12px;
             text-align: center;
-            border-left: 3px solid var(--color-gold);
+            border-left: 4px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-card:hover::before {
+            opacity: 1;
         }
 
         .stat-value {
             font-size: 1.2em;
             font-weight: 700;
-            color: #1c2b1f;
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
 
         .stat-label {
             font-size: 0.7em;
-            color: #718096;
+            color: rgba(255, 255, 255, 0.8);
             margin-top: 2px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         /* 三维测量界面 */
@@ -825,16 +1015,48 @@
         }
 
         .placeholder-content {
-            background: rgba(255,255,255,0.9);
-            border-radius: 12px;
-            padding: 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 1.8rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .placeholder-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .placeholder-content:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .placeholder-content:hover::before {
+            opacity: 1;
         }
 
         .placeholder-icon {
@@ -845,36 +1067,101 @@
 
         .placeholder-title {
             font-size: 1.2rem;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 0.8rem;
-            color: #4a5568;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .placeholder-content:hover .placeholder-title {
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
 
         .placeholder-desc {
-            color: #718096;
-            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
             font-size: 0.9rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .placeholder-content:hover .placeholder-desc {
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
         }
 
         .info-card {
-            background: rgba(255,255,255,0.9);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.2),
+                        0 0 0 1px rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 1.8rem;
             overflow-y: auto;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .info-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2), 
+                        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                        0 0 0 1px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .info-card:hover::before {
+            opacity: 1;
         }
 
         .info-card h3 {
-            color: #2d3748;
-            margin-bottom: 0.8rem;
-            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 0.6rem;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.1);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .info-card:hover h3 {
+            text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
         }
 
         .info-card p {
-            color: #4a5568;
+            color: rgba(255, 255, 255, 0.9);
             line-height: 1.5;
-            margin-bottom: 0.8rem;
-            font-size: 0.9rem;
+            margin-bottom: 0.6rem;
+            font-size: 1.1rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .info-card:hover p {
+            color: rgba(255, 255, 255, 0.95);
+            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
         }
 
         /* 历史记录界面 */
@@ -887,20 +1174,24 @@
 
         .records-list {
             flex: 1;
-            background: rgba(255,255,255,0.9);
-            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: 20px;
             padding: 1rem;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             overflow-y: auto;
         }
 
         .record-item {
-            background: rgba(255,255,255,0.8);
-            border-radius: 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.05));
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             padding: 0.8rem;
             margin-bottom: 0.8rem;
-            border-left: 3px solid var(--color-forest);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 3px solid rgba(255, 255, 255, 0.3);
         }
 
         .record-header {
@@ -912,21 +1203,26 @@
 
         .record-date {
             font-weight: 600;
-            color: #2d3748;
+            color: #ffffff;
             font-size: 0.9rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .record-type {
-            background: var(--color-gold);
-            color: #2a2100;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
             padding: 2px 6px;
             border-radius: 10px;
             font-size: 0.7rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         .record-details {
-            color: #4a5568;
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.8rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         /* 优化的动画效果 */
@@ -942,10 +1238,69 @@
         }
 
         /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .menu-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 1.5rem;
+                height: calc(100vh - 200px);
+                padding: 2rem 1.5rem;
+            }
+            
+            .menu-card {
+                height: 220px;
+                min-height: 220px;
+            }
+            
+            .menu-card-number {
+                font-size: 5rem;
+            }
+            
+            .menu-card-content {
+                width: 85%;
+                height: 35%;
+                padding: 0.6rem 1rem;
+                gap: 0.8rem;
+            }
+            
+            .menu-card-title {
+                font-size: 1rem;
+            }
+            
+            .menu-card-desc {
+                font-size: 0.6rem;
+            }
+        }
+
         @media (max-width: 768px) {
             .menu-grid {
-                grid-template-columns: 1fr;
-                height: calc(100vh - 150px);
+                grid-template-columns: repeat(2, 1fr);
+                height: calc(100vh - 180px);
+                gap: 1rem;
+                padding: 1.5rem 1rem;
+            }
+            
+            .menu-card {
+                height: 200px;
+                min-height: 200px;
+            }
+            
+            .menu-card-number {
+                font-size: 4rem;
+            }
+            
+            .menu-card-content {
+                width: 90%;
+                height: 40%;
+                padding: 0.5rem 0.8rem;
+                gap: 0.6rem;
+            }
+            
+            .menu-card-title {
+                font-size: 0.9rem;
+            }
+            
+            .menu-card-desc {
+                font-size: 0.55rem;
             }
             
             .measurement-2d,
@@ -989,6 +1344,37 @@
         }
 
         @media (max-width: 480px) {
+            .menu-grid {
+                grid-template-columns: 1fr;
+                gap: 0.8rem;
+                height: calc(100vh - 150px);
+                padding: 1rem 0.5rem;
+            }
+            
+            .menu-card {
+                height: 180px;
+                min-height: 180px;
+            }
+            
+            .menu-card-number {
+                font-size: 3.5rem;
+            }
+            
+            .menu-card-content {
+                width: 95%;
+                height: 45%;
+                padding: 0.4rem 0.6rem;
+                gap: 0.5rem;
+            }
+            
+            .menu-card-title {
+                font-size: 0.8rem;
+            }
+            
+            .menu-card-desc {
+                font-size: 0.5rem;
+            }
+            
             .start-title {
                 font-size: 2rem;
             }
@@ -1074,33 +1460,42 @@
         <div class="screen main-menu" id="mainMenu">
             <div class="menu-header">
                 <h1 class="menu-title">系统主菜单</h1>
-                <p class="menu-subtitle">选择您需要的功能模块</p>
             </div>
             <div class="menu-grid">
                 <div class="menu-card" onclick="showScreen('measurement2d')">
-                    <span class="menu-card-icon">📏</span>
-                    <h3 class="menu-card-title">二维测量界面</h3>
-                    <p class="menu-card-desc">激光雷达平面扫描，树木检测与测量</p>
+                    <div class="menu-card-number">1</div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">二维测量</h3>
+                        <p class="menu-card-desc">激光雷达平面扫描，树木检测与测量</p>
+                    </div>
                 </div>
                 <div class="menu-card" onclick="showScreen('measurement3d')">
-                    <span class="menu-card-icon">📐</span>
-                    <h3 class="menu-card-title">三维测量界面</h3>
-                    <p class="menu-card-desc">立体扫描分析，三维建模与测量</p>
+                    <div class="menu-card-number">2</div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">三维测量</h3>
+                        <p class="menu-card-desc">立体扫描分析，三维建模与测量</p>
+                    </div>
                 </div>
                 <div class="menu-card" onclick="showScreen('forestDetection')">
-                    <span class="menu-card-icon">🌲</span>
-                    <h3 class="menu-card-title">林场探测界面</h3>
-                    <p class="menu-card-desc">大面积林场扫描，森林资源调查</p>
+                    <div class="menu-card-number">3</div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">林场探测</h3>
+                        <p class="menu-card-desc">大面积林场扫描，森林资源调查</p>
+                    </div>
                 </div>
                 <div class="menu-card" onclick="showScreen('systemInfo')">
-                    <span class="menu-card-icon">ℹ️</span>
-                    <h3 class="menu-card-title">系统介绍</h3>
-                    <p class="menu-card-desc">系统功能说明，使用指南</p>
+                    <div class="menu-card-number">4</div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">系统介绍</h3>
+                        <p class="menu-card-desc">系统功能说明，使用指南</p>
+                    </div>
                 </div>
                 <div class="menu-card" onclick="showScreen('historyRecords')">
-                    <span class="menu-card-icon">📊</span>
-                    <h3 class="menu-card-title">历史记录</h3>
-                    <p class="menu-card-desc">查看历史扫描数据和分析结果</p>
+                    <div class="menu-card-number">5</div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">历史记录</h3>
+                        <p class="menu-card-desc">查看历史扫描数据和分析结果</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1109,7 +1504,7 @@
         <div class="screen sub-screen" id="measurement2d">
             <div class="sub-header">
                 <h2 class="sub-title">📏 二维测量界面</h2>
-                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+                <button class="back-button" onclick="showMainMenu()">返回主菜单</button>
             </div>
             <div class="sub-content">
                 <div class="measurement-2d">
@@ -1234,7 +1629,7 @@
                         </div>
                         <div class="control-section">
                             <h3>📊 系统日志</h3>
-                            <div class="log-area" id="logArea" style="height: 120px; background: #0f1412; color: #eef3f7; padding: 10px; border-radius: 8px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.12); overflow-y: auto;">
+                            <div class="log-area" id="logArea" style="height: 120px; background: linear-gradient(135deg, rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.1)); backdrop-filter: blur(10px); color: #e0e0e0; padding: 10px; border-radius: 10px; font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.4; border: 1px solid rgba(255,255,255,0.2); overflow-y: auto; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);">
                                 <div class="log-entry log-info">[INFO] 系统已启动，等待连接...</div>
                             </div>
                             <button class="btn btn-primary" id="clearLogBtn" style="margin-top: 8px;">清除日志</button>
@@ -1248,7 +1643,7 @@
         <div class="screen sub-screen" id="measurement3d">
             <div class="sub-header">
                 <h2 class="sub-title">📐 三维测量界面</h2>
-                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+                <button class="back-button" onclick="showMainMenu()">返回主菜单</button>
             </div>
             <div class="sub-content">
                 <div class="measurement-3d">
@@ -1270,7 +1665,7 @@
         <div class="screen sub-screen" id="forestDetection">
             <div class="sub-header">
                 <h2 class="sub-title">🌲 林场探测界面</h2>
-                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+                <button class="back-button" onclick="showMainMenu()">返回主菜单</button>
             </div>
             <div class="sub-content">
                 <div class="forest-detection">
@@ -1292,7 +1687,7 @@
         <div class="screen sub-screen" id="systemInfo">
             <div class="sub-header">
                 <h2 class="sub-title">ℹ️ 系统介绍</h2>
-                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+                <button class="back-button" onclick="showMainMenu()">返回主菜单</button>
             </div>
             <div class="sub-content">
                 <div class="system-info">
@@ -1330,7 +1725,7 @@
         <div class="screen sub-screen" id="historyRecords">
             <div class="sub-header">
                 <h2 class="sub-title">📊 历史记录</h2>
-                <button class="back-button" onclick="showMainMenu()">← 返回主菜单</button>
+                <button class="back-button" onclick="showMainMenu()">返回主菜单</button>
             </div>
             <div class="sub-content">
                 <div class="history-records">
