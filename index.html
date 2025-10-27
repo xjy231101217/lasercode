@@ -2444,106 +2444,100 @@
                 drawGrid();
             });
 
-            // 添加触摸控制功能
-            let isPinching = false;
-            let lastDistance = 0;
-            let lastScale = 1;
-            let currentScale = 1;
-            let translateX = 0;
-            let translateY = 0;
+            // 触摸控制变量
+            let viewTransform = {
+                scale: 1,
+                x: 0,
+                y: 0
+            };
             let isDragging = false;
             let lastTouchX = 0;
             let lastTouchY = 0;
+            let isPinching = false;
+            let lastDistance = 0;
+            let initialScale = 1;
 
             // 计算两点距离
             function getDistance(x1, y1, x2, y2) {
-                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+                return Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
             }
 
-            // 缩放和平移绘制
-            function redrawWithTransform() {
+            // 应用变换绘制
+            function drawWithTransform() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // 将变换应用到绘图
                 ctx.save();
-                // 移动到画布中心
-                ctx.translate(canvas.width / 2, canvas.height / 2);
-                // 应用平移
-                ctx.translate(translateX / currentScale, translateY / currentScale);
+                // 先平移到画布中心
+                ctx.translate(canvas.width / 2 + viewTransform.x, canvas.height / 2 + viewTransform.y);
                 // 应用缩放
-                ctx.scale(currentScale, currentScale);
-                // 移动回原点
+                ctx.scale(viewTransform.scale, viewTransform.scale);
+                // 再平移回原点
                 ctx.translate(-canvas.width / 2, -canvas.height / 2);
                 
-                // 绘制网格
+                // 绘制原有内容
                 drawGrid();
+                
                 ctx.restore();
                 
-                // 在Canvas右上角显示缩放比例
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-                ctx.font = '12px Arial';
-                ctx.fillText(`缩放: ${(currentScale * 100).toFixed(0)}%`, canvas.width - 100, 20);
+                // 显示缩放信息（不影响原有样式）
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '11px Arial';
+                ctx.fillText(`缩放: ${Math.round(viewTransform.scale * 100)}%`, 10, 15);
             }
 
-            // 触摸开始
+            // 触摸事件处理
             canvas.addEventListener('touchstart', function(e) {
                 e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
                 if (e.touches.length === 1) {
                     isDragging = true;
-                    lastTouchX = e.touches[0].clientX - translateX;
-                    lastTouchY = e.touches[0].clientY - translateY;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
                 } else if (e.touches.length === 2) {
                     isPinching = true;
                     const touch1 = e.touches[0];
                     const touch2 = e.touches[1];
                     lastDistance = getDistance(touch1.clientX, touch1.clientY, touch2.clientX, touch2.clientY);
+                    initialScale = viewTransform.scale;
                 }
             }, { passive: false });
 
-            // 触摸移动
             canvas.addEventListener('touchmove', function(e) {
                 e.preventDefault();
                 if (e.touches.length === 1 && isDragging) {
-                    // 单指拖动
-                    translateX = e.touches[0].clientX - lastTouchX;
-                    translateY = e.touches[0].clientY - lastTouchY;
-                    redrawWithTransform();
+                    const deltaX = e.touches[0].clientX - lastTouchX;
+                    const deltaY = e.touches[0].clientY - lastTouchY;
+                    viewTransform.x += deltaX;
+                    viewTransform.y += deltaY;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
+                    drawWithTransform();
                 } else if (e.touches.length === 2 && isPinching) {
-                    // 双指缩放
                     const touch1 = e.touches[0];
                     const touch2 = e.touches[1];
                     const currentDistance = getDistance(touch1.clientX, touch1.clientY, touch2.clientX, touch2.clientY);
                     const scaleChange = currentDistance / lastDistance;
-                    currentScale = Math.max(0.5, Math.min(3, lastScale * scaleChange));
-                    lastDistance = currentDistance;
-                    redrawWithTransform();
+                    viewTransform.scale = Math.max(0.5, Math.min(3, initialScale * scaleChange));
+                    drawWithTransform();
                 }
             }, { passive: false });
 
-            // 触摸结束
             canvas.addEventListener('touchend', function(e) {
                 if (e.touches.length === 0) {
                     isDragging = false;
                     isPinching = false;
-                    lastScale = currentScale;
                 } else if (e.touches.length === 1) {
                     isPinching = false;
-                    lastScale = currentScale;
-                    const touch = e.touches[0];
-                    lastTouchX = touch.clientX - translateX;
-                    lastTouchY = touch.clientY - translateY;
+                    lastDistance = 0;
+                    lastTouchX = e.touches[0].clientX;
+                    lastTouchY = e.touches[0].clientY;
                 }
             }, { passive: false });
 
-            // 重置视图功能
+            // 重置视图按钮功能
             const resetViewBtn = document.getElementById('resetViewBtn');
             if (resetViewBtn) {
                 resetViewBtn.addEventListener('click', function() {
-                    currentScale = 1;
-                    lastScale = 1;
-                    translateX = 0;
-                    translateY = 0;
+                    viewTransform = { scale: 1, x: 0, y: 0 };
                     drawGrid();
                 });
             }
