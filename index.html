@@ -2,7 +2,11 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-touch-fullscreen" content="yes">
     <title>激光雷达树木检测系统</title>
     <!-- 优化的字体加载 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1255,6 +1259,198 @@
         }
 
         /* 响应式设计 */
+        /* 10.1寸触摸屏专用样式 - 1280x800分辨率 */
+        @media (min-width: 1279px) and (max-width: 1281px) and (min-height: 799px) and (max-height: 801px) {
+            :root {
+                font-size: 12px; /* 基础字体调整为12px */
+            }
+
+            .start-title {
+                font-size: 3.5rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .start-subtitle {
+                font-size: 1.5rem;
+                margin-bottom: 2rem;
+            }
+
+            .start-button {
+                padding: 14px 70px;
+                font-size: 1.8rem;
+            }
+
+            .start-button .arrow-icon {
+                width: 42px;
+                height: 42px;
+                font-size: 20px;
+            }
+
+            .loading-title {
+                font-size: 1.6rem;
+            }
+
+            .loading-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .loading-logo {
+                font-size: 2.5rem;
+            }
+
+            .loading-progress {
+                width: 280px;
+            }
+
+            .menu-title {
+                font-size: 2.2rem;
+            }
+
+            .menu-subtitle {
+                font-size: 1rem;
+            }
+
+            .menu-grid {
+                grid-template-columns: repeat(5, 1fr);
+                height: calc(100vh - 100px);
+                gap: 0;
+            }
+
+            .menu-card {
+                min-height: 320px;
+            }
+
+            .menu-card-number {
+                font-size: 5.5rem;
+            }
+
+            .menu-card-content {
+                width: 80%;
+                padding: 1.2rem;
+                gap: 0.8rem;
+            }
+
+            .menu-card-title {
+                font-size: 2rem;
+            }
+
+            .menu-card-desc {
+                font-size: 0.95rem;
+            }
+
+            .sub-title {
+                font-size: 1.4rem;
+            }
+
+            .back-button {
+                padding: 8px 20px;
+                font-size: 0.85rem;
+            }
+
+            .btn {
+                padding: 8px 15px;
+                font-size: 0.85rem;
+            }
+
+            .control-section h3 {
+                font-size: 0.9rem;
+                margin-bottom: 0.8rem;
+            }
+
+            .stat-value {
+                font-size: 1rem;
+            }
+
+            .stat-label {
+                font-size: 0.65rem;
+            }
+
+            .stat-card {
+                padding: 10px;
+            }
+
+            .canvas-container {
+                height: 45vh;
+            }
+
+            .fullscreen-button {
+                width: 45px;
+                height: 45px;
+                font-size: 18px;
+            }
+
+            .info-card h3 {
+                font-size: 1.2rem;
+            }
+
+            .info-card p {
+                font-size: 0.95rem;
+            }
+
+            .record-item {
+                padding: 0.6rem;
+            }
+
+            .record-date {
+                font-size: 0.8rem;
+            }
+
+            .record-details {
+                font-size: 0.75rem;
+            }
+
+            /* 触摸优化 - 增加触摸目标大小 */
+            .menu-card {
+                min-width: 120px;
+                min-height: 140px;
+            }
+
+            .start-button {
+                min-height: 50px;
+                touch-action: manipulation;
+            }
+
+            .btn {
+                min-height: 44px;
+                touch-action: manipulation;
+                -webkit-tap-highlight-color: rgba(255, 255, 255, 0.3);
+            }
+
+            .back-button {
+                min-height: 44px;
+                touch-action: manipulation;
+            }
+
+            /* 为触摸屏添加视觉反馈 */
+            .menu-card:active {
+                transform: scale(1.05);
+            }
+
+            .btn:active {
+                transform: translateY(0) scale(0.98);
+            }
+
+            .start-button:active {
+                transform: translateY(0) scale(0.98);
+            }
+
+            .back-button:active {
+                transform: translateX(0) scale(0.98);
+            }
+
+            /* 禁用双击缩放 */
+            html {
+                touch-action: manipulation;
+                -ms-touch-action: manipulation;
+            }
+
+            /* 优化文字选择 */
+            .menu-card, .btn, .back-button {
+                user-select: none;
+                -webkit-user-select: none;
+            }
+        }
+
         @media (max-width: 1200px) {
             .menu-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -1567,10 +1763,10 @@
                         </div>
                         <div style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4caf50;">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-size: 0.9em; color: #2e7d32; font-weight: 600;">
+                                <span style="font-size: 0.9em; color: #ffffff; font-weight: 600;">
                                     📏 标准测量高度: 1.3m (1300mm)
                                 </span>
-                                <span id="heightIndicator" style="font-size: 0.8em; color: #666;">
+                                <span id="heightIndicator" style="font-size: 0.8em; color: #ffffff;">
                                     等待测量...
                                 </span>
                             </div>
@@ -1635,9 +1831,9 @@
                                 </div>
                             </div>
                             <div style="margin-top: 10px;">
-                                <label style="font-size: 0.9em; color: #4a5568;">标准测量高度: 1.3m (1300mm)</label>
+                                <label style="font-size: 0.9em; color: #ffffff;">标准测量高度: 1.3m (1300mm)</label>
                                 <div style="background: rgba(76, 175, 80, 0.1); padding: 8px; border-radius: 6px; margin-top: 5px; border-left: 3px solid #4caf50;">
-                                    <span style="font-size: 0.8em; color: #2e7d32;">
+                                    <span style="font-size: 0.8em; color: #ffffff;">
                                         <strong>标准树径测量：</strong>在距离地面1.3米高度处测量树木直径
                                     </span>
                                 </div>
@@ -1941,7 +2137,7 @@
             if (heightData.isMeasuring) {
                 heightStatus.textContent = '测量中';
                 heightIndicator.textContent = '正在测量...';
-                heightIndicator.style.color = '#4caf50';
+                heightIndicator.style.color = '#ffffff';
             } else if (heightData.count > 0) {
                 heightStatus.textContent = '已测量';
                 const accuracy = Math.abs(heightData.current - heightData.targetHeight);
@@ -1966,7 +2162,7 @@
             } else {
                 heightStatus.textContent = '未测量';
                 heightIndicator.textContent = '等待测量...';
-                heightIndicator.style.color = '#666';
+                heightIndicator.style.color = '#ffffff';
                 progressBar.style.width = '0%';
                 progressBar.className = 'height-progress-bar';
             }
@@ -2117,12 +2313,18 @@
             
             const ctx = canvas.getContext('2d');
             
-            // 根据屏幕尺寸设置canvas尺寸（4:3比例）
+            // 根据屏幕尺寸设置canvas尺寸
             function setCanvasSize() {
                 const screenWidth = window.innerWidth;
+                const screenHeight = window.innerHeight;
                 let canvasWidth, canvasHeight;
                 
-                if (screenWidth <= 480) {
+                // 检测是否为1280x800屏幕
+                if (screenWidth === 1280 && screenHeight === 800) {
+                    // 10.1寸屏幕专用尺寸
+                    canvasWidth = 400;
+                    canvasHeight = 300; // 4:3比例
+                } else if (screenWidth <= 480) {
                     canvasWidth = 300;
                     canvasHeight = 225; // 4:3比例
                 } else if (screenWidth <= 768) {
@@ -2133,7 +2335,7 @@
                     canvasHeight = 300; // 4:3比例
                 }
                 
-                // 设置canvas的实际尺寸为4:3比例
+                // 设置canvas的实际尺寸
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
                 
@@ -2241,6 +2443,110 @@
                 const newSize = setCanvasSize();
                 drawGrid();
             });
+
+            // 添加触摸控制功能
+            let isPinching = false;
+            let lastDistance = 0;
+            let lastScale = 1;
+            let currentScale = 1;
+            let translateX = 0;
+            let translateY = 0;
+            let isDragging = false;
+            let lastTouchX = 0;
+            let lastTouchY = 0;
+
+            // 计算两点距离
+            function getDistance(x1, y1, x2, y2) {
+                return Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            }
+
+            // 缩放和平移绘制
+            function redrawWithTransform() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // 将变换应用到绘图
+                ctx.save();
+                // 移动到画布中心
+                ctx.translate(canvas.width / 2, canvas.height / 2);
+                // 应用平移
+                ctx.translate(translateX / currentScale, translateY / currentScale);
+                // 应用缩放
+                ctx.scale(currentScale, currentScale);
+                // 移动回原点
+                ctx.translate(-canvas.width / 2, -canvas.height / 2);
+                
+                // 绘制网格
+                drawGrid();
+                ctx.restore();
+                
+                // 在Canvas右上角显示缩放比例
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.font = '12px Arial';
+                ctx.fillText(`缩放: ${(currentScale * 100).toFixed(0)}%`, canvas.width - 100, 20);
+            }
+
+            // 触摸开始
+            canvas.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    lastTouchX = e.touches[0].clientX - translateX;
+                    lastTouchY = e.touches[0].clientY - translateY;
+                } else if (e.touches.length === 2) {
+                    isPinching = true;
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    lastDistance = getDistance(touch1.clientX, touch1.clientY, touch2.clientX, touch2.clientY);
+                }
+            }, { passive: false });
+
+            // 触摸移动
+            canvas.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+                if (e.touches.length === 1 && isDragging) {
+                    // 单指拖动
+                    translateX = e.touches[0].clientX - lastTouchX;
+                    translateY = e.touches[0].clientY - lastTouchY;
+                    redrawWithTransform();
+                } else if (e.touches.length === 2 && isPinching) {
+                    // 双指缩放
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const currentDistance = getDistance(touch1.clientX, touch1.clientY, touch2.clientX, touch2.clientY);
+                    const scaleChange = currentDistance / lastDistance;
+                    currentScale = Math.max(0.5, Math.min(3, lastScale * scaleChange));
+                    lastDistance = currentDistance;
+                    redrawWithTransform();
+                }
+            }, { passive: false });
+
+            // 触摸结束
+            canvas.addEventListener('touchend', function(e) {
+                if (e.touches.length === 0) {
+                    isDragging = false;
+                    isPinching = false;
+                    lastScale = currentScale;
+                } else if (e.touches.length === 1) {
+                    isPinching = false;
+                    lastScale = currentScale;
+                    const touch = e.touches[0];
+                    lastTouchX = touch.clientX - translateX;
+                    lastTouchY = touch.clientY - translateY;
+                }
+            }, { passive: false });
+
+            // 重置视图功能
+            const resetViewBtn = document.getElementById('resetViewBtn');
+            if (resetViewBtn) {
+                resetViewBtn.addEventListener('click', function() {
+                    currentScale = 1;
+                    lastScale = 1;
+                    translateX = 0;
+                    translateY = 0;
+                    drawGrid();
+                });
+            }
         }
 
         // 初始化
