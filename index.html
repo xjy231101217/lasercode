@@ -45,6 +45,9 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             will-change: auto;
+            /* 禁用触摸手势 - 但允许Canvas区域 */
+            touch-action: manipulation;
+            -ms-touch-action: manipulation;
         }
 
         /* 字体加载完成后应用Cinzel字体 */
@@ -765,6 +768,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            touch-action: none !important;
+            -ms-touch-action: none !important;
         }
 
         #scanCanvas { 
@@ -773,6 +778,12 @@
             cursor: crosshair;
             border-radius: 6px;
             background: rgba(255,255,255,0.1);
+            touch-action: none !important;
+            -ms-touch-action: none !important;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         .canvas-header {
@@ -2485,9 +2496,13 @@
                 ctx.fillText(`缩放: ${Math.round(viewTransform.scale * 100)}%`, 10, 15);
             }
 
-            // 触摸事件处理
+            // 触摸事件处理 - 针对Ubuntu触摸屏优化
             canvas.addEventListener('touchstart', function(e) {
+                // 立即阻止所有默认行为，防止Ubuntu浏览器手势识别
                 e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                
                 if (e.touches.length === 1) {
                     isDragging = true;
                     lastTouchX = e.touches[0].clientX;
@@ -2499,10 +2514,17 @@
                     lastDistance = getDistance(touch1.clientX, touch1.clientY, touch2.clientX, touch2.clientY);
                     initialScale = viewTransform.scale;
                 }
-            }, { passive: false });
+                return false;
+            }, { passive: false, capture: false });
 
             canvas.addEventListener('touchmove', function(e) {
-                e.preventDefault();
+                // 如果正在进行拖动或缩放，立即阻止所有默认行为
+                if (isDragging || isPinching) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                
                 if (e.touches.length === 1 && isDragging) {
                     const deltaX = e.touches[0].clientX - lastTouchX;
                     const deltaY = e.touches[0].clientY - lastTouchY;
@@ -2519,9 +2541,16 @@
                     viewTransform.scale = Math.max(0.5, Math.min(3, initialScale * scaleChange));
                     drawWithTransform();
                 }
-            }, { passive: false });
+                return false;
+            }, { passive: false, capture: false });
 
             canvas.addEventListener('touchend', function(e) {
+                if (isDragging || isPinching) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                
                 if (e.touches.length === 0) {
                     isDragging = false;
                     isPinching = false;
@@ -2531,7 +2560,19 @@
                     lastTouchX = e.touches[0].clientX;
                     lastTouchY = e.touches[0].clientY;
                 }
-            }, { passive: false });
+                return false;
+            }, { passive: false, capture: false });
+
+            canvas.addEventListener('touchcancel', function(e) {
+                if (isDragging || isPinching) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.stopImmediatePropagation();
+                }
+                isDragging = false;
+                isPinching = false;
+                return false;
+            }, { passive: false, capture: false });
 
             // 重置视图按钮功能
             const resetViewBtn = document.getElementById('resetViewBtn');
